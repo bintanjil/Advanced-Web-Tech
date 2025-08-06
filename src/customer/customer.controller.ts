@@ -1,25 +1,55 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Search, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { CustomerService } from "./customer.service";
-import { AddCustomerDto } from "./add-customer.dto";
-import { UpdateCustomerDto } from "./update-customer.dto";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { Express } from 'express';
-import { MulterError, diskStorage } from "multer";
-
-
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Put,
+    Delete,
+    UploadedFile,
+    UseInterceptors,
+    BadRequestException,
+    Query,
+  } from "@nestjs/common";
+  import { CustomerService } from "./customer.service";
+  import { AddCustomerDto } from "./add-customer.dto";
+  import { UpdateCustomerDto } from "./update-customer.dto";
+  import { FileInterceptor } from "@nestjs/platform-express";
+  import { diskStorage } from "multer";
+  import { Express } from "express";
 
 @Controller('customer')
 export class CustomerController{
     constructor(private readonly customerService:CustomerService){}
     
-    @Get('first')
-    getCustomer():string{
-        return this.customerService.getCustomer();
+    // Retrieve all customers
+    @Get()
+    getAllCustomers(){
+    return this.customerService.findAll();
     }
 
-    @Get(':id')
-    getCustomerById(@Param('id', ParseIntPipe) id : number){
+    // Retrieve customer by id
+    @Get('id/:id')
+    getCustomerById(@Param('id') id : string){
         return this.customerService.getCustomerById(id);
+    }
+
+    // Retrieve customer by username
+    @Get('username/:username')
+    findByUsername(@Param('username') username: string) {
+        return this.customerService.findByUsername(username);
+    }
+
+    @Get('substring/:substring')
+    findFullNameSubstring(@Param('substring') substring: string) {
+        return this.customerService.findByFullNameSubstring(substring);
+    }
+
+    // Remove customer - username
+    @Delete('username/:username')
+    removeByUsername(@Param('username') username: string) {
+        return this.customerService.removeByUsername(username);
     }
 
     @Post()
@@ -27,55 +57,38 @@ export class CustomerController{
        return this.customerService.createCustomer(addCustomerDto); 
     }
 
-    @Get()
-    getAllCustomers(){
-    return this.customerService.findAll();
-    }
-
-    @Put(':id')
-    updateCustomer(
-        @Param('id',ParseIntPipe) id: number,
-        @Body()updateCustomerDto:UpdateCustomerDto,
-    )
-    {
-        return this.customerService.updateCustomer(id,updateCustomerDto);
-
-    }
-
-    @Post('upload')
+    // Add new customer
+    @Post("upload")
     @UseInterceptors(
-        FileInterceptor('file',
-            {
-                fileFilter:(req,file,cb) => {
-                    if(file.originalname.match(/\.(jpg|jpeg|png|wepb)$/)){
-                        cb(null , true)
-                        console.log(file.buffer);
-                    }
-                    else {
-                    cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
-                }
-
-                },
-                limits:{fileSize:2*1024*1024},
-                storage:diskStorage({
-                    destination:'./upload',
-                    filename: function (req, file, cb) {
-                    cb(null, Date.now() + file.originalname)
-                },
-                })
-            }
-        ))
+      FileInterceptor("file", {
+        storage: diskStorage({
+          destination: "./upload",
+          filename: (req, file, cb) => {
+            const uniqueName = Date.now() + "-" + file.originalname;
+            cb(null, uniqueName);
+          },
+        }),
+        limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+        fileFilter: (req, file, cb) => {
+          const allowedExtension = /\.(jpg|jpeg|png|webp)$/i;
+          if (!allowedExtension.test(file.originalname)) {
+            return cb(new BadRequestException("Only image files (jpg, jpeg, png, webp) are allowed"), false);
+          }
+          cb(null, true);
+        },
+      })
+    )
     addCustomer(
-    @Body() addCustomerDto: AddCustomerDto,
-    @UploadedFile() file: Express.Multer.File,
-    )   
-    {
-        addCustomerDto.fileName = file.filename;
-        const createdCustomer = this.customerService.createCustomer(addCustomerDto);
-        return createdCustomer; 
-    }
-        
+      @UploadedFile() file: Express.Multer.File,
+      @Body() addCustomerDto: AddCustomerDto
+    ) {
+      if (!file) {
+        throw new BadRequestException("File is required and must be an image file");
+      }
 
+      addCustomerDto.fileName = file.filename;
+      return this.customerService.createCustomer(addCustomerDto);
+    }
 }
 
 

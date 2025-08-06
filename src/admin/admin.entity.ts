@@ -4,9 +4,9 @@ import { Column, Entity, PrimaryColumn } from "typeorm";
 export class Admin{
     @PrimaryColumn({unsigned:true})
     id : number;
-    @Column({length:100})
+    @Column({type: 'varchar', length:100})
     name : string;
-    @Column({unique:true})
+    @Column({type:'varchar', unique:true})
     email: string;
     @Column({length:17})
     nid:string;

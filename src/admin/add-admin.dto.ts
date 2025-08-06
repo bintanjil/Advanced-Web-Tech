@@ -34,5 +34,5 @@ export class AddAdminDto{
     status?:'active' | 'inactive';
     
     @IsOptional()
-    fileName:string;
+    fileName?:string;
 }

@@ -1,10 +1,23 @@
-import { IsEmail, isNotEmpty, IsNotEmpty, IsOptional, Matches, MinLength } from "class-validator";
+import { IsEmail, isNotEmpty, IsNotEmpty, IsOptional, Matches, MinLength, IsBoolean } from "class-validator";
+import { Transform } from "class-transformer";
 
 export class AddCustomerDto{
     @IsNotEmpty()
-    @MinLength(5)
-    @Matches(/^[A-za-z\s]+$/, {message: "Name must contain only letters and spaces"})
-    name : string;
+    @Matches(/^[A-Za-z0-9_]+$/, {message: "Username must contain only letters, numbers, and underscores"})
+    username: string;
+
+    @IsNotEmpty()
+    @Matches(/^[A-za-z\s]+$/, {message: "Full name must contain only letters and spaces"})
+    fullName: string;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+    })
+    @IsBoolean()
+    isActive?: boolean;
 
     @IsNotEmpty()
     @IsEmail()
@@ -25,5 +38,5 @@ export class AddCustomerDto{
     phone: string;
     
     @IsOptional()
-    fileName:string;
+    fileName?: string;
 }

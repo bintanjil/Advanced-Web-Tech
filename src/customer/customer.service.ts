@@ -1,57 +1,77 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { AddCustomerDto } from "./add-customer.dto";
 import { UpdateCustomerDto } from "./update-customer.dto";
-
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Like } from "typeorm";
+import { Customer } from "./customer.entity";
 
 @Injectable()
 export class CustomerService{
-    private customers  =[
-        {
-            id : 1,
-            name : "Rudro",
-            email : "rudro@aiub.edu",
-            password : "D23456",
-            gender : "male",
-            phone : "01732221148",
-            fileName : "rudro.jpg",
-        },
-    ];
+    constructor(
+        @InjectRepository(Customer)
+        private readonly customerRepository: Repository<Customer>
+    ) {}
 
-    private getNextId(): number {
-    if (this.customers.length === 0) {
-      return 1;
-    }
-    const maxId = Math.max(...this.customers.map(a => a.id));
-    return maxId + 1;
+    // Retrieve all customers
+    async findAll(): Promise<Customer[]> {
+        return await this.customerRepository.find();
     }
 
-    findAll(){
-        return this.customers;
-    }
-
-    getCustomerById(id:number){
-        const customer = this.customers.find((a) => a.id === id);
-        if(!customer) throw new NotFoundException("Customer not found");
+    // Retrieve customer by ID 
+    async getCustomerById(id: string): Promise<Customer> {
+        const customer = await this.customerRepository.findOne({ where: { id } });
+        if (!customer) {
+            throw new NotFoundException("Customer not found");
+        }
         return customer;
     }
 
-    getCustomer():string{
-        return "This is customer";
-    }
-    
-    createCustomer(addCustomerDto:AddCustomerDto){
-        const newCustomer = {id: this.getNextId(), ...addCustomerDto};
-        this.customers.push(newCustomer);
-        return newCustomer;
-        
+    // Retrieve customer by username
+    async findByUsername(username: string): Promise<Customer> {
+        const customer = await this.customerRepository.findOne({ where: { username } });
+        if (!customer) {
+            throw new NotFoundException(`Customer with username '${username}' not found`);
+        }
+        return customer;
     }
 
-    updateCustomer(id: number, updateCustomerDto: UpdateCustomerDto){
-        const customerExist = this.customers.findIndex((a) => a.id === id)
-        if(customerExist === -1) throw new NotFoundException("Customer Not Found");
-
-        this.customers[customerExist] = { ...this.customers[customerExist], ...updateCustomerDto};
-        return this.customers[customerExist];
+    // Retrieve customers by substring of their fullname
+    async findByFullNameSubstring(substring: string): Promise<Customer[]> {
+        return await this.customerRepository.find({
+            where: {
+                fullName: Like(`%${substring}%`)
+            }
+        });
     }
-    
+
+    // Remove customer - username
+    async removeByUsername(username: string): Promise<string> {
+        const customer = await this.customerRepository.findOne({ where: { username } });
+
+        if (!customer) {
+            return `Customer with username "${username}" does not exist.`;
+        }
+
+        await this.customerRepository.remove(customer);
+        return `Customer with username was "${username}" removed successfully.`;
+    }
+
+    // Check if username already exists
+    async usernameExists(username: string): Promise<boolean> {
+        const existingCustomer = await this.customerRepository.findOne({ where: { username } });
+        return !!existingCustomer;
+    }
+
+    // Add new customer
+    async createCustomer(addCustomerDto: AddCustomerDto): Promise<Customer> {
+        // Check if username already exists
+        const usernameExists = await this.usernameExists(addCustomerDto.username);
+        if (usernameExists) {
+            throw new ConflictException(`Username '${addCustomerDto.username}' already exists`);
+        }
+
+        const customer = this.customerRepository.create(addCustomerDto);
+        return await this.customerRepository.save(customer);
+    }
+
 }
