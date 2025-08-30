@@ -1,0 +1,26 @@
+import { Repository } from 'typeorm';
+import { Seller } from './seller.entity';
+import { AddSellerDto } from './add-seller.dto';
+import { UpdateSellerDto } from './update-seller.dto';
+import { AdminService } from 'src/admin/admin.service';
+import { MailService } from 'src/mail/mail.service';
+export declare class SellerService {
+    private readonly sellerRepository;
+    private adminService;
+    private mailService;
+    private readonly salt;
+    private readonly logger;
+    constructor(sellerRepository: Repository<Seller>, adminService: AdminService, mailService: MailService);
+    createSeller(addSellerDto: AddSellerDto, adminId: number): Promise<Seller>;
+    changeSellerStatus(id: number, status: 'active' | 'inactive', adminId: number): Promise<Seller>;
+    findAll(): Promise<Seller[]>;
+    getSellerById(id: number): Promise<Seller>;
+    updateSeller(id: number, updateSellerdto: UpdateSellerDto, adminId: number): Promise<Seller>;
+    updateOwnSeller(selfId: number, dto: UpdateSellerDto): Promise<Seller>;
+    deleteSeller(id: number, adminId: number): Promise<void>;
+    getSellersByAdmin(adminId: number): Promise<Seller[]>;
+    getActiveSellers(): Promise<Seller[]>;
+    findByEmail(email: string): Promise<Pick<Seller, 'id' | 'email' | 'password'> | null>;
+    searchSeller(q: string): Promise<Seller[]>;
+    getInactiveSellers(): Promise<Seller[]>;
+}

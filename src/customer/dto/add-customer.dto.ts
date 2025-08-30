@@ -1,0 +1,37 @@
+import { IsString, IsEmail, IsEnum, MinLength, Matches, IsOptional } from 'class-validator';
+import { Gender } from '../geneder.type';
+
+export class AddCustomerDto {
+  @IsString()
+  @MinLength(3)
+  username: string;
+
+  @IsString()
+  @MinLength(3)
+  fullName: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'Password too weak - must contain at least 1 uppercase, 1 lowercase, and 1 number or special character'
+  })
+  password: string;
+
+  @IsEnum(Gender)
+  @IsOptional()
+  gender?: Gender;
+
+  @IsString()
+  @Matches(/^\+?[\d\s-]+$/, {
+    message: 'Invalid phone number format'
+  })
+  @IsOptional()
+  phone?: string;
+
+  @IsString()
+  @IsOptional()
+  fileName?: string;
+}
