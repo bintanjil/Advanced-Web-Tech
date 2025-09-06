@@ -36,27 +36,17 @@ export class AdminController {
       private readonly mailService: MailService
     ) {}
 
-      @Post('testMail')
-    async testMail(@Body('email') email: string) {
-      if (!email) {
-        return {
-          success: false,
-          message: 'Email address is required'
-        };
-      }
-      return await this.mailService.testEmail(email);
-    }
-
+ 
     @Get()
-    @UseGuards(AuthGuard)
-    @Roles(Role.ADMIN)
+    // @UseGuards(AuthGuard)
+    // @Roles(Role.ADMIN)
     async getAllAdmins(){
     return await this.adminService.findAll();
     }
 
     @Get("byId/:id")
-    @UseGuards(AuthGuard)
-    @Roles(Role.ADMIN)
+    // @UseGuards(AuthGuard)
+    // @Roles(Role.ADMIN)
     async getAdminById(@Param("id", ParseIntPipe) id: number) {
         return await this.adminService.getAdminById(id);
     }
@@ -67,8 +57,8 @@ export class AdminController {
     // }
 
     @Patch(":id")
-    @UseGuards(AuthGuard)
-    @Roles(Role.ADMIN)
+    // @UseGuards(AuthGuard)
+    // @Roles(Role.ADMIN)
     async updateAdmin(
         @Param("id", ParseIntPipe) id: number,
         @Body() updateAdminDto: UpdateAdminDto
@@ -77,8 +67,8 @@ export class AdminController {
     }
 
     @Patch('updateStatus/:id')
-    @UseGuards(AuthGuard)
-    @Roles(Role.ADMIN)
+    // @UseGuards(AuthGuard)
+    // @Roles(Role.ADMIN)
     async changeStatus(@Param('id', ParseIntPipe) id: number, @Body('status') status: 'active' | 'inactive') {
     return await this.adminService.changeStatus(id, status);
     }
@@ -93,16 +83,16 @@ export class AdminController {
     }
 
     @Delete(':id')
-    @UseGuards(AuthGuard)
-    @Roles(Role.ADMIN)
+    // @UseGuards(AuthGuard)
+    // @Roles(Role.ADMIN)
     async deleteAdmin(@Param('id', ParseIntPipe) id : number){
       await this.adminService.deleteAdmin(id);
       return { message: `Admin with id ${id} deleted successfully` };
     }
 
     @Post('createAdmin')
-    @UseGuards(AuthGuard)
-    @Roles('admin')
+    // @UseGuards(AuthGuard)
+    // @Roles('admin')
     @UseInterceptors(
     FileInterceptor('myfile', {
     storage: diskStorage({
@@ -131,18 +121,18 @@ async addAdmin(
   }
   return await this.adminService.createAdmin(addAdminDto);
 }
-@Get('check')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
-testProtected() {
-  return {
-    message: 'You are authenticated',
+// @Get('check')
+// // @UseGuards(AuthGuard)
+// // @Roles(Role.ADMIN)
+// testProtected() {
+//   return {
+//     message: 'You are authenticated',
     
-  };
-}
+//   };
+// }
 @Post('seller')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard)
+// @Roles(Role.ADMIN)
 @UseInterceptors(
   FileInterceptor('file', {
     storage: diskStorage({
@@ -171,29 +161,29 @@ async createSeller(
 }
 
 @Get('mySellers')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard)
+// @Roles(Role.ADMIN)
   async mySellers(@Request() req) {
     if (req.user.role !== 'admin') throw new UnauthorizedException();
     return this.adminService.getSellersByAdmin(req.user.sub);
   }
 @Get('sellers/search')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard)
+// @Roles(Role.ADMIN)
 async searchAllSellers(@Query('q') query: string, @Request() req) {
   if (req.user.role !== 'admin') throw new UnauthorizedException();
   return this.sellerService.searchSeller(query ?? '');
 }
 @Get('sellers/inactive')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard)
+// @Roles(Role.ADMIN)
 async getInactiveSellers(@Request() req) {
   if (req.user.role !== 'admin') throw new UnauthorizedException();
   return this.sellerService.getInactiveSellers();
 }
 @Get('sellers/active')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
+// @UseGuards(AuthGuard)
+// @Roles(Role.ADMIN)
 async getActiveSeller(@Request() req) {
   if (req.user.role !== 'admin') throw new UnauthorizedException();
   return this.sellerService.getActiveSellers();

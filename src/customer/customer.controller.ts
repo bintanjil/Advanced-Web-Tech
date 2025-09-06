@@ -28,7 +28,7 @@ import { UpdateAddressDto } from "./dto/update-address.dto";
 import { AddAddressDto } from "./dto/add-address.dto";
 import { OrderItemDto } from "src/order/dto/add-order.dto";
 
-@Controller('customers')
+@Controller('customer')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
     
