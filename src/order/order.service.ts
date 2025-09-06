@@ -7,6 +7,7 @@ import { Customer } from '../customer/customer.entity';
 import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './update-order.dto';
 import { OrderItem } from './order-item.entity';
+import { OrderStatus } from './order.types';
 
 @Injectable()
 export class OrderService {
@@ -21,6 +22,56 @@ export class OrderService {
     private readonly customerRepository: Repository<Customer>,
     private dataSource: DataSource,
   ) {}
+
+   async getCustomerOrders(customerId: string): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: { customer: { id: customerId } },
+      relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  async updateOrderStatus(orderId: number, sellerId: number, status: OrderStatus): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller']
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    // Check if the seller owns any products in this order
+    const hasSellerProducts = order.orderItems.some(
+      item => item.product.seller.id === sellerId
+    );
+
+    if (!hasSellerProducts) {
+      throw new ForbiddenException('You can only update orders containing your products');
+    }
+
+    if (status === 'confirmed') {
+      // Check if all products are available in sufficient quantity
+      for (const item of order.orderItems) {
+        const product = item.product;
+        if (product.seller.id === sellerId && product.stock < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for product ${product.name}`);
+        }
+      }
+
+      // Reduce stock for seller's products
+      for (const item of order.orderItems) {
+        if (item.product.seller.id === sellerId) {
+          const product = item.product;
+          product.stock -= item.quantity;
+          await this.productRepository.save(product);
+        }
+      }
+    }
+
+    order.status = status;
+    return this.orderRepository.save(order);
+  }
 
   async createOrder(addOrderDto: AddOrderDto, customerId?: string): Promise<Order> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -192,13 +243,6 @@ export class OrderService {
     }
   }
 
-  async getCustomerOrders(customerId: string): Promise<Order[]> {
-    return await this.orderRepository.find({
-      where: { customer: { id: customerId } },
-      relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller'],
-      order: { createdAt: 'DESC' }
-    });
-  }
 
   async getSellerOrders(sellerId: number): Promise<Order[]> {
     return await this.orderRepository.find({

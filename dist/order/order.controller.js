@@ -17,23 +17,28 @@ const common_1 = require("@nestjs/common");
 const order_service_1 = require("./order.service");
 const add_order_dto_1 = require("./dto/add-order.dto");
 const update_order_dto_1 = require("./dto/update-order.dto");
+const update_order_status_dto_1 = require("./dto/update-order-status.dto");
 const auth_guard_1 = require("../auth/auth.guard");
 const roles_decorator_1 = require("../auth/roles.decorator");
+const role_enum_1 = require("../auth/role.enum");
 let OrderController = class OrderController {
     orderService;
     constructor(orderService) {
         this.orderService = orderService;
     }
+    async updateOrderStatus(orderId, updateStatusDto, req) {
+        return this.orderService.updateOrderStatus(orderId, req.user.sub, updateStatusDto.status);
+    }
     async createOrder(addOrderDto, req) {
-        if (req.user.role !== 'customer') {
-            throw new common_1.ForbiddenException('Only customers can create orders');
-        }
         return await this.orderService.createOrder(addOrderDto, req.user.sub);
+    }
+    async getCustomerOrders(req) {
+        return await this.orderService.getCustomerOrders(req.user.sub);
     }
     async getOrders(req) {
         const { role, sub } = req.user;
         switch (role) {
-            case 'admin':
+            case role_enum_1.Role.ADMIN:
                 return await this.orderService.getAllOrders();
             case 'seller':
                 return await this.orderService.getSellerOrders(parseInt(sub));
@@ -112,14 +117,35 @@ let OrderController = class OrderController {
 };
 exports.OrderController = OrderController;
 __decorate([
+    (0, common_1.Put)(':id/status'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.SELLER),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, update_order_status_dto_1.UpdateOrderStatusDto, Object]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "updateOrderStatus", null);
+__decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.CUSTOMER),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [add_order_dto_1.AddOrderDto, Object]),
     __metadata("design:returntype", Promise)
 ], OrderController.prototype, "createOrder", null);
+__decorate([
+    (0, common_1.Get)('customer/my-orders'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.CUSTOMER),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "getCustomerOrders", null);
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

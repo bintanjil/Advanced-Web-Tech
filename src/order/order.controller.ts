@@ -14,21 +14,39 @@ import {
 import { OrderService } from './order.service';
 import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/role.enum';
 
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  // New endpoint for seller to update order status
+  @Put(':id/status')
+  @UseGuards(AuthGuard)
+  @Roles(Role.SELLER)
+  async updateOrderStatus(
+    @Param('id', ParseIntPipe) orderId: number,
+    @Body() updateStatusDto: UpdateOrderStatusDto,
+    @Request() req
+  ) {
+    return this.orderService.updateOrderStatus(orderId, req.user.sub, updateStatusDto.status);
+  }
+
   @Post()
   @UseGuards(AuthGuard)
+  @Roles(Role.CUSTOMER)
   async createOrder(@Body() addOrderDto: AddOrderDto, @Request() req) {
-    // Only customers can create orders
-    if (req.user.role !== 'customer') {
-      throw new ForbiddenException('Only customers can create orders');
-    }
     return await this.orderService.createOrder(addOrderDto, req.user.sub);
+  }
+
+  @Get('customer/my-orders')
+  @UseGuards(AuthGuard)
+  @Roles(Role.CUSTOMER)
+  async getCustomerOrders(@Request() req) {
+    return await this.orderService.getCustomerOrders(req.user.sub);
   }
 
   @Get()
@@ -37,7 +55,7 @@ export class OrderController {
     const { role, sub } = req.user;
 
     switch (role) {
-      case 'admin':
+      case Role.ADMIN:
         return await this.orderService.getAllOrders();
       case 'seller':
         return await this.orderService.getSellerOrders(parseInt(sub));

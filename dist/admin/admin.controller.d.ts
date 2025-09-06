@@ -3,10 +3,20 @@ import { AddAdminDto } from "./add-admin.dto";
 import { UpdateAdminDto } from "./update-admin.dto";
 import { AddSellerDto } from "src/seller/add-seller.dto";
 import { SellerService } from "src/seller/seller.service";
+import { MailService } from "src/mail/mail.service";
 export declare class AdminController {
     private readonly adminService;
     private readonly sellerService;
-    constructor(adminService: AdminService, sellerService: SellerService);
+    private readonly mailService;
+    constructor(adminService: AdminService, sellerService: SellerService, mailService: MailService);
+    testMail(email: string): Promise<{
+        success: boolean;
+        message: string;
+        error: any;
+    } | {
+        success: boolean;
+        message: string;
+    }>;
     getAllAdmins(): Promise<import("./admin.entity").Admin[]>;
     getAdminById(id: number): Promise<import("./admin.entity").Admin>;
     updateAdmin(id: number, updateAdminDto: UpdateAdminDto): Promise<import("./admin.entity").Admin>;

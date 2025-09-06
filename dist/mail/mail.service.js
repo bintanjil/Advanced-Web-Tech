@@ -17,34 +17,55 @@ let MailService = class MailService {
     constructor(mailerService) {
         this.mailerService = mailerService;
     }
-    async sendEmail(to, subject, content) {
+    async testEmail(to) {
         try {
             await this.mailerService.sendMail({
-                to,
-                subject,
-                text: content
+                to: to,
+                from: 'researchaiub77@gmail.com',
+                subject: 'Test Email from Gadgeto',
+                text: 'This is a test email from Gadgeto',
+                html: `
+          <h1>Test Email</h1>
+          <p>This is a test email from Gadgeto E-commerce Platform.</p>
+          <p>If you received this email, the mail service is working correctly!</p>
+        `,
             });
+            return {
+                success: true,
+                message: 'Test email sent successfully'
+            };
         }
         catch (error) {
-            console.error('Failed to send email:', error);
-            throw error;
+            console.error('Mail error:', error);
+            return {
+                success: false,
+                message: 'Failed to send email',
+                error: error.message
+            };
         }
     }
     async sendAdminWelcomeEmail(email, name) {
-        const content = `Welcome ${name},\n\nYour admin account has been created.\n\nBest regards,\nThe Gadgeto Team`;
-        await this.sendEmail(email, 'Welcome to Admin Panel', content);
-    }
-    async sendCustomerWelcomeEmail(name, email) {
-        const content = `Welcome ${name},\n\nYour account has been created with email: ${email}\n\nBest regards,\nThe Gadgeto Team`;
-        await this.sendEmail(email, 'Welcome to The Gadgeto', content);
-    }
-    async sendSellerWelcomeEmail(name, email, password) {
-        const content = `Welcome ${name},\n\nYour seller account has been created.\nEmail: ${email}\nPassword: ${password}\n\nPlease change your password after login.\n\nBest regards,\nThe Gadgeto Team`;
-        await this.sendEmail(email, 'Welcome to The Gadgeto Seller Portal', content);
+        const htmlContent = `
+      <h2>Welcome to Gadgeto Admin Panel, ${name}!</h2>
+      <p>Your admin account has been created successfully.</p>
+      <p>You can now access the admin panel and manage the platform.</p>
+      <br>
+      <p>Best regards,<br>The Gadgeto Team</p>
+    `;
+        return this.sendEmail(email, 'Welcome to Gadgeto Admin Panel', htmlContent);
     }
     async sendPasswordResetEmail(email, resetLink) {
-        const content = `Hello,\n\nClick this link to reset your password:\n${resetLink}\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nThe Gadgeto Team`;
-        await this.sendEmail(email, 'Password Reset Request', content);
+        const htmlContent = `
+      <h2>Password Reset Request</h2>
+      <p>We received a request to reset your password.</p>
+      <p>Click the button below to reset your password:</p>
+      <br>
+      <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a>
+      <br><br>
+      <p>If you did not request this, please ignore this email.</p>
+      <p>Best regards,<br>The Gadgeto Team</p>
+    `;
+        return this.sendEmail(email, 'Password Reset Request', htmlContent);
     }
     async checkMail(email) {
         const emailExists = false;
@@ -54,6 +75,59 @@ let MailService = class MailService {
         else {
             return { success: false, message: 'Email does not exist' };
         }
+    }
+    async sendEmail(to, subject, htmlContent) {
+        try {
+            await this.mailerService.sendMail({
+                to: to,
+                from: 'researchaiub77@gmail.com',
+                subject: subject,
+                html: htmlContent,
+            });
+            return {
+                success: true,
+                message: 'Email sent successfully'
+            };
+        }
+        catch (error) {
+            console.error('Mail error:', error);
+            return {
+                success: false,
+                message: 'Failed to send email',
+                error: error.message
+            };
+        }
+    }
+    async sendCustomerWelcomeEmail(email, name) {
+        const htmlContent = `
+      <h2>Welcome to Gadgeto, ${name}!</h2>
+      <p>Your customer account has been created successfully.</p>
+      <p>You can now explore our products and enjoy shopping with us.</p>
+      <br>
+      <p>Best regards,<br>The Gadgeto Team</p>
+    `;
+        return this.sendEmail(email, 'Welcome to Gadgeto', htmlContent);
+    }
+    async sendSellerWelcomeEmail(email, name) {
+        const htmlContent = `
+      <h2>Welcome to Gadgeto Seller Platform, ${name}!</h2>
+      <p>Your seller account has been created successfully.</p>
+      <p>You can now list your products and start selling on our platform.</p>
+      <br>
+      <p>Best regards,<br>The Gadgeto Team</p>
+    `;
+        return this.sendEmail(email, 'Welcome to Gadgeto Seller Platform', htmlContent);
+    }
+    async sendOrderConfirmationEmail(email, orderId, orderDetails) {
+        const htmlContent = `
+      <h2>Order Confirmation - Order #${orderId}</h2>
+      <p>Thank you for your order! Here are your order details:</p>
+      <pre>${JSON.stringify(orderDetails, null, 2)}</pre>
+      <br>
+      <p>We will notify you once your order is shipped.</p>
+      <p>Best regards,<br>The Gadgeto Team</p>
+    `;
+        return this.sendEmail(email, `Order Confirmation - Order #${orderId}`, htmlContent);
     }
 };
 exports.MailService = MailService;

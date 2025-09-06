@@ -66,10 +66,10 @@ export class SellerService {
     
     // Send welcome email
     try {
-      await this.mailService.sendSellerWelcomeEmail(
+      await this.mailService.sendAdminWelcomeEmail(
         savedSeller.email,
         savedSeller.name,
-        addSellerDto.password
+        
       );
     } catch (error) {
       this.logger.error('Failed to send welcome email to seller', error);

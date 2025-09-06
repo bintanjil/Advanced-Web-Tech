@@ -8,31 +8,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MailModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const mailer_1 = require("@nestjs-modules/mailer");
 const mail_service_1 = require("./mail.service");
+const mailer_1 = require("@nestjs-modules/mailer");
 let MailModule = class MailModule {
 };
 exports.MailModule = MailModule;
 exports.MailModule = MailModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot(),
-            mailer_1.MailerModule.forRootAsync({
-                imports: [config_1.ConfigModule],
-                inject: [config_1.ConfigService],
-                useFactory: (config) => ({
-                    transport: {
-                        service: 'gmail',
-                        auth: {
-                            user: config.get('MAIL_USER'),
-                            pass: config.get('MAIL_PASSWORD'),
-                        },
+            mailer_1.MailerModule.forRoot({
+                transport: {
+                    host: 'smtp.gmail.com',
+                    port: 587,
+                    secure: false,
+                    auth: {
+                        user: 'researchaiub77@gmail.com',
+                        pass: 'clkvvpncgbgcytey',
                     },
-                    defaults: {
-                        from: config.get('MAIL_FROM'),
-                    },
-                }),
+                },
+                defaults: {
+                    from: '"Gadgeto" <researchaiub77@gmail.com>',
+                },
             }),
         ],
         providers: [mail_service_1.MailService],

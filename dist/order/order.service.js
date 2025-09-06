@@ -33,6 +33,43 @@ let OrderService = class OrderService {
         this.customerRepository = customerRepository;
         this.dataSource = dataSource;
     }
+    async getCustomerOrders(customerId) {
+        return await this.orderRepository.find({
+            where: { customer: { id: customerId } },
+            relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller'],
+            order: { createdAt: 'DESC' }
+        });
+    }
+    async updateOrderStatus(orderId, sellerId, status) {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+            relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller']
+        });
+        if (!order) {
+            throw new common_1.NotFoundException(`Order with ID ${orderId} not found`);
+        }
+        const hasSellerProducts = order.orderItems.some(item => item.product.seller.id === sellerId);
+        if (!hasSellerProducts) {
+            throw new common_1.ForbiddenException('You can only update orders containing your products');
+        }
+        if (status === 'confirmed') {
+            for (const item of order.orderItems) {
+                const product = item.product;
+                if (product.seller.id === sellerId && product.stock < item.quantity) {
+                    throw new common_1.BadRequestException(`Insufficient stock for product ${product.name}`);
+                }
+            }
+            for (const item of order.orderItems) {
+                if (item.product.seller.id === sellerId) {
+                    const product = item.product;
+                    product.stock -= item.quantity;
+                    await this.productRepository.save(product);
+                }
+            }
+        }
+        order.status = status;
+        return this.orderRepository.save(order);
+    }
     async createOrder(addOrderDto, customerId) {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
@@ -176,13 +213,6 @@ let OrderService = class OrderService {
         finally {
             await queryRunner.release();
         }
-    }
-    async getCustomerOrders(customerId) {
-        return await this.orderRepository.find({
-            where: { customer: { id: customerId } },
-            relations: ['orderItems', 'orderItems.product', 'orderItems.product.seller'],
-            order: { createdAt: 'DESC' }
-        });
     }
     async getSellerOrders(sellerId) {
         return await this.orderRepository.find({

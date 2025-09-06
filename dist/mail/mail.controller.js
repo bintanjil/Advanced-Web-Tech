@@ -22,9 +22,18 @@ let MailController = class MailController {
     constructor(mailService) {
         this.mailService = mailService;
     }
-    async sendWelcomeEmail(sendEmailDto) {
+    async testEmail(email) {
+        if (!email) {
+            return {
+                success: false,
+                message: 'Email address is required'
+            };
+        }
+        return this.mailService.testEmail(email);
+    }
+    async sendAdminWelcome(data) {
         try {
-            await this.mailService.sendSellerWelcomeEmail(sendEmailDto.email, sendEmailDto.name, sendEmailDto.password);
+            await this.mailService.sendAdminWelcomeEmail(data.email, data.name);
             return {
                 success: true,
                 message: 'Welcome email sent successfully'
@@ -40,7 +49,7 @@ let MailController = class MailController {
     }
     async sendCustomerWelcomeEmail(sendEmailDto) {
         try {
-            await this.mailService.sendCustomerWelcomeEmail(sendEmailDto.name, sendEmailDto.email);
+            await this.mailService.sendAdminWelcomeEmail(sendEmailDto.name, sendEmailDto.email);
             return {
                 success: true,
                 message: 'Welcome email sent successfully'
@@ -57,12 +66,20 @@ let MailController = class MailController {
 };
 exports.MailController = MailController;
 __decorate([
-    (0, common_1.Post)('welcomeSeller'),
+    (0, common_1.Post)('test'),
+    __param(0, (0, common_1.Body)('email')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MailController.prototype, "testEmail", null);
+__decorate([
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.Post)('admin/welcome'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [send_email_dto_1.SendEmailDto]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], MailController.prototype, "sendWelcomeEmail", null);
+], MailController.prototype, "sendAdminWelcome", null);
 __decorate([
     (0, common_1.Post)('welcomeCustomer'),
     __param(0, (0, common_1.Body)()),
@@ -72,7 +89,6 @@ __decorate([
 ], MailController.prototype, "sendCustomerWelcomeEmail", null);
 exports.MailController = MailController = __decorate([
     (0, common_1.Controller)('mail'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __metadata("design:paramtypes", [mail_service_1.MailService])
 ], MailController);
 //# sourceMappingURL=mail.controller.js.map

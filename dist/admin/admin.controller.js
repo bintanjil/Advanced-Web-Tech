@@ -24,12 +24,24 @@ const add_seller_dto_1 = require("../seller/add-seller.dto");
 const seller_service_1 = require("../seller/seller.service");
 const roles_decorator_1 = require("../auth/roles.decorator");
 const role_enum_1 = require("../auth/role.enum");
+const mail_service_1 = require("../mail/mail.service");
 let AdminController = class AdminController {
     adminService;
     sellerService;
-    constructor(adminService, sellerService) {
+    mailService;
+    constructor(adminService, sellerService, mailService) {
         this.adminService = adminService;
         this.sellerService = sellerService;
+        this.mailService = mailService;
+    }
+    async testMail(email) {
+        if (!email) {
+            return {
+                success: false,
+                message: 'Email address is required'
+            };
+        }
+        return await this.mailService.testEmail(email);
     }
     async getAllAdmins() {
         return await this.adminService.findAll();
@@ -96,6 +108,13 @@ let AdminController = class AdminController {
     }
 };
 exports.AdminController = AdminController;
+__decorate([
+    (0, common_1.Post)('testMail'),
+    __param(0, (0, common_1.Body)('email')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "testMail", null);
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
@@ -249,6 +268,7 @@ __decorate([
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)("admin"),
     __metadata("design:paramtypes", [admin_service_1.AdminService,
-        seller_service_1.SellerService])
+        seller_service_1.SellerService,
+        mail_service_1.MailService])
 ], AdminController);
 //# sourceMappingURL=admin.controller.js.map

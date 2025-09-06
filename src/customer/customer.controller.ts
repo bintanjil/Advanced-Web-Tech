@@ -26,6 +26,7 @@ import { Roles } from '../auth/roles.decorator';
 import { extname } from 'path';
 import { UpdateAddressDto } from "./dto/update-address.dto";
 import { AddAddressDto } from "./dto/add-address.dto";
+import { OrderItemDto } from "src/order/dto/add-order.dto";
 
 @Controller('customers')
 export class CustomerController {

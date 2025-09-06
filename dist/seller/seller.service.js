@@ -64,7 +64,7 @@ let SellerService = SellerService_1 = class SellerService {
         seller.admin = admin;
         const savedSeller = await this.sellerRepository.save(seller);
         try {
-            await this.mailService.sendSellerWelcomeEmail(savedSeller.email, savedSeller.name, addSellerDto.password);
+            await this.mailService.sendAdminWelcomeEmail(savedSeller.email, savedSeller.name);
         }
         catch (error) {
             this.logger.error('Failed to send welcome email to seller', error);

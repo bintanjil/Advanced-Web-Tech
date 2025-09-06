@@ -26,13 +26,26 @@ import { AddSellerDto } from "src/seller/add-seller.dto";
 import { SellerService } from "src/seller/seller.service";
 import { Roles } from "src/auth/roles.decorator";
 import { Role } from "src/auth/role.enum";
+import { MailService } from "src/mail/mail.service";
 
 @Controller("admin")
 export class AdminController {
-    constructor(private readonly adminService: AdminService,
+    constructor(
+      private readonly adminService: AdminService,
       private readonly sellerService : SellerService,
-      
+      private readonly mailService: MailService
     ) {}
+
+      @Post('testMail')
+    async testMail(@Body('email') email: string) {
+      if (!email) {
+        return {
+          success: false,
+          message: 'Email address is required'
+        };
+      }
+      return await this.mailService.testEmail(email);
+    }
 
     @Get()
     @UseGuards(AuthGuard)

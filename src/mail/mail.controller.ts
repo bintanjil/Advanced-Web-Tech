@@ -5,19 +5,25 @@ import { Roles } from '../auth/roles.decorator';
 import { SendEmailDto } from './send-email.dto';
 
 @Controller('mail')
-@UseGuards(AuthGuard)
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
+  @Post('test')
+  async testEmail(@Body('email') email: string) {
+    if (!email) {
+      return {
+        success: false,
+        message: 'Email address is required'
+      };
+    }
+    return this.mailService.testEmail(email);
+  }
 
-  @Post('welcomeSeller')
-  async sendWelcomeEmail(@Body() sendEmailDto: SendEmailDto) {
+  @UseGuards(AuthGuard)
+  @Post('admin/welcome')
+  async sendAdminWelcome(@Body() data: { email: string; name: string }) {
     try {
-      await this.mailService.sendSellerWelcomeEmail(
-        sendEmailDto.email,
-        sendEmailDto.name,
-        sendEmailDto.password
-      );
+      await this.mailService.sendAdminWelcomeEmail(data.email, data.name);
       return {
         success: true,
         message: 'Welcome email sent successfully'
@@ -33,7 +39,7 @@ export class MailController {
   @Post('welcomeCustomer')
   async sendCustomerWelcomeEmail(@Body() sendEmailDto: SendEmailDto) {
     try { 
-      await this.mailService.sendCustomerWelcomeEmail(
+      await this.mailService.sendAdminWelcomeEmail(
         sendEmailDto.name,
         sendEmailDto.email,
       );
