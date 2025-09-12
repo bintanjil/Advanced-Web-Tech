@@ -4,8 +4,16 @@ import { UpdateSellerDto } from './update-seller.dto';
 export declare class SellerController {
     private readonly sellerService;
     constructor(sellerService: SellerService);
-    getAllSellers(): Promise<import("./seller.entity").Seller[]>;
+    getAllSellers(req: any): Promise<{
+        success: boolean;
+        data: import("./seller.entity").Seller[];
+    }>;
     getSellerById(id: number, req: any): Promise<import("./seller.entity").Seller>;
+    registerSeller(addSellerDto: AddSellerDto, file: Express.Multer.File): Promise<{
+        success: boolean;
+        message: string;
+        data: import("./seller.entity").Seller;
+    }>;
     createSeller(addSellerDto: AddSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
     updateSeller(id: number, dto: UpdateSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
     changeSellerStatus(id: number, status: 'active' | 'inactive', req: any): Promise<import("./seller.entity").Seller>;
@@ -14,7 +22,10 @@ export declare class SellerController {
         message: string;
     }>;
     searchSellers(query: string): Promise<import("./seller.entity").Seller[]>;
-    getSellersByAdmin(req: any): Promise<import("./seller.entity").Seller[]>;
+    getSellersByAdmin(req: any): Promise<{
+        success: boolean;
+        data: import("./seller.entity").Seller[];
+    }>;
     updateOwnSeller(dto: UpdateSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
     getActiveSellers(): Promise<import("./seller.entity").Seller[]>;
     getOwnProfile(req: any): Promise<import("./seller.entity").Seller>;

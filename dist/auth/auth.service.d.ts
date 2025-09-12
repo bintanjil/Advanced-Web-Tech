@@ -8,6 +8,16 @@ export declare class AuthService {
     constructor(adminService: AdminService, sellerService: SellerService, jwtService: JwtService);
     signIn(email: string, password: string): Promise<{
         access_token: string;
+        refresh_token: string;
+        user: {
+            id: any;
+            email: any;
+            role: string;
+        };
     }>;
     decodeToken(token: string): Promise<any>;
+    refreshToken(refreshToken: string): Promise<{
+        access_token: string;
+        refresh_token: string;
+    }>;
 }

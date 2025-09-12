@@ -21,29 +21,83 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async login(loginDto) {
-        return this.authService.signIn(loginDto.email, loginDto.password);
+    async login(loginDto, response) {
+        try {
+            const result = await this.authService.signIn(loginDto.email, loginDto.password);
+            response.cookie('jwtToken', result.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 3600000,
+                path: '/'
+            });
+            response.cookie('refreshToken', result.refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: '/'
+            });
+            return {
+                user: {
+                    id: result.user.id,
+                    email: result.user.email,
+                    role: result.user.role
+                }
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
+        }
     }
-    async decodeToken(token) {
-        return this.authService.decodeToken(token);
+    async logout(response) {
+        response.clearCookie('jwtToken', { path: '/' });
+        response.clearCookie('refreshToken', { path: '/' });
+        return { message: 'Logged out successfully' };
+    }
+    async verify(request) {
+        try {
+            const token = request.cookies['jwtToken'];
+            if (!token) {
+                throw new common_1.UnauthorizedException('No token found');
+            }
+            const decoded = await this.authService.decodeToken(token);
+            return {
+                user: {
+                    id: decoded.sub,
+                    email: decoded.email,
+                    role: decoded.role
+                }
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Invalid token');
+        }
     }
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, common_1.Post)('decodeToken'),
-    __param(0, (0, common_1.Body)('token')),
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "decodeToken", null);
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.Get)('verify'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verify", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

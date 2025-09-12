@@ -19,8 +19,11 @@ const add_admin_dto_1 = require("./add-admin.dto");
 const update_admin_dto_1 = require("./update-admin.dto");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
+const auth_guard_1 = require("../auth/auth.guard");
 const add_seller_dto_1 = require("../seller/add-seller.dto");
 const seller_service_1 = require("../seller/seller.service");
+const roles_decorator_1 = require("../auth/roles.decorator");
+const role_enum_1 = require("../auth/role.enum");
 const mail_service_1 = require("../mail/mail.service");
 let AdminController = class AdminController {
     adminService;
@@ -31,7 +34,10 @@ let AdminController = class AdminController {
         this.sellerService = sellerService;
         this.mailService = mailService;
     }
-    async getAllAdmins() {
+    async getAllAdmins(req) {
+        if (req.user.role !== 'admin') {
+            throw new common_1.UnauthorizedException('Admin access required');
+        }
         return await this.adminService.findAll();
     }
     async getAdminById(id) {
@@ -89,16 +95,37 @@ let AdminController = class AdminController {
             throw new common_1.UnauthorizedException();
         return this.sellerService.getActiveSellers();
     }
+    async getAllSellers(req) {
+        try {
+            if (req.user.role !== 'admin')
+                throw new common_1.UnauthorizedException('Admin access required');
+            const sellers = await this.sellerService.getAllSellers();
+            console.log('Fetched sellers:', sellers);
+            return {
+                success: true,
+                data: sellers
+            };
+        }
+        catch (error) {
+            console.error('Error in getAllSellers:', error);
+            throw error;
+        }
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getAllAdmins", null);
 __decorate([
     (0, common_1.Get)("byId/:id"),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -106,6 +133,8 @@ __decorate([
 ], AdminController.prototype, "getAdminById", null);
 __decorate([
     (0, common_1.Patch)(":id"),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -114,6 +143,8 @@ __decorate([
 ], AdminController.prototype, "updateAdmin", null);
 __decorate([
     (0, common_1.Patch)('updateStatus/:id'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)('status')),
     __metadata("design:type", Function),
@@ -135,6 +166,8 @@ __decorate([
 ], AdminController.prototype, "getInactiveAdmins", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -142,6 +175,8 @@ __decorate([
 ], AdminController.prototype, "deleteAdmin", null);
 __decorate([
     (0, common_1.Post)('createAdmin'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('myfile', {
         storage: (0, multer_1.diskStorage)({
             destination: './upload',
@@ -166,7 +201,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "addAdmin", null);
 __decorate([
-    (0, common_1.Post)('seller'),
+    (0, common_1.Post)('createSeller'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
             destination: './upload',
@@ -184,6 +221,8 @@ __decorate([
 ], AdminController.prototype, "createSeller", null);
 __decorate([
     (0, common_1.Get)('mySellers'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -191,6 +230,8 @@ __decorate([
 ], AdminController.prototype, "mySellers", null);
 __decorate([
     (0, common_1.Get)('sellers/search'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Query)('q')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -199,6 +240,8 @@ __decorate([
 ], AdminController.prototype, "searchAllSellers", null);
 __decorate([
     (0, common_1.Get)('sellers/inactive'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -206,11 +249,22 @@ __decorate([
 ], AdminController.prototype, "getInactiveSellers", null);
 __decorate([
     (0, common_1.Get)('sellers/active'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getActiveSeller", null);
+__decorate([
+    (0, common_1.Get)('sellers'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "getAllSellers", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)("admin"),
     __metadata("design:paramtypes", [admin_service_1.AdminService,

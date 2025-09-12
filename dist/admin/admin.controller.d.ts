@@ -9,7 +9,7 @@ export declare class AdminController {
     private readonly sellerService;
     private readonly mailService;
     constructor(adminService: AdminService, sellerService: SellerService, mailService: MailService);
-    getAllAdmins(): Promise<import("./admin.entity").Admin[]>;
+    getAllAdmins(req: any): Promise<import("./admin.entity").Admin[]>;
     getAdminById(id: number): Promise<import("./admin.entity").Admin>;
     updateAdmin(id: number, updateAdminDto: UpdateAdminDto): Promise<import("./admin.entity").Admin>;
     changeStatus(id: number, status: 'active' | 'inactive'): Promise<import("./admin.entity").Admin>;
@@ -24,4 +24,8 @@ export declare class AdminController {
     searchAllSellers(query: string, req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getInactiveSellers(req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getActiveSeller(req: any): Promise<import("../seller/seller.entity").Seller[]>;
+    getAllSellers(req: any): Promise<{
+        success: boolean;
+        data: import("../seller/seller.entity").Seller[];
+    }>;
 }

@@ -38,6 +38,9 @@ let SellerService = SellerService_1 = class SellerService {
         this.adminService = adminService;
         this.mailService = mailService;
     }
+    async getAllSellers() {
+        return this.sellerRepository.find();
+    }
     async createSeller(addSellerDto, adminId) {
         if (!addSellerDto.password) {
             throw new common_1.BadRequestException('Password is required');

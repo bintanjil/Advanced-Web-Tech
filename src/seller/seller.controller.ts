@@ -26,6 +26,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { RolesGuard } from '../auth/roles.guard';
+import { use } from 'passport';
 
 @Controller('seller')
 @UseGuards(AuthGuard, RolesGuard)
@@ -34,9 +35,18 @@ export class SellerController {
 
  
   @Get()
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  async getAllSellers() {
-    return this.sellerService.findAll();
+  async getAllSellers(@Request() req) {
+    try {
+      const sellers = await this.sellerService.findAll();
+      return {
+        success: true,
+        data: sellers
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Failed to fetch sellers');
+    }
   }
 
   @Get(':id')
@@ -47,6 +57,33 @@ export class SellerController {
       throw new ForbiddenException('You can only view your own profile');
     }
     return this.sellerService.getSellerById(id);
+  }
+
+  @Post('registration')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './upload',
+        filename: (req, file, cb) => cb(null, Date.now() + '_' + file.originalname),
+      }),
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  async registerSeller(
+    @Body() addSellerDto: AddSellerDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      if (file) addSellerDto.fileName = file.filename;
+      const result = await this.sellerService.createSeller(addSellerDto, 0); // 0 indicates self-registration
+      return {
+        success: true,
+        message: 'Seller registered successfully',
+        data: result
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error.message || 'Failed to register seller');
+    }
   }
 
   @Post()
@@ -126,7 +163,20 @@ export class SellerController {
   @Get('admin/mySellers')
   @Roles(Role.ADMIN)
   async getSellersByAdmin(@Request() req) {
-    return this.sellerService.getSellersByAdmin(req.user.sub);
+    try {
+      const sellers = await this.sellerService.getSellersByAdmin(req.user.sub);
+      console.log('Sellers found:', sellers); // Debug log
+      return {
+        success: true,
+        data: sellers
+      };
+    } catch (error) {
+      console.error('Error fetching sellers:', error);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Failed to fetch sellers data');
+    }
   }
 
   @Put('update/profile')

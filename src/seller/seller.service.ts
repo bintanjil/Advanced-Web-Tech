@@ -36,6 +36,10 @@ export class SellerService {
     private mailService: MailService,
   ) {}
 
+  async getAllSellers(): Promise<Seller[]> {
+    return this.sellerRepository.find();
+  }
+
    async createSeller(addSellerDto: AddSellerDto, adminId: number): Promise<Seller> {
     if (!addSellerDto.password) {
       throw new BadRequestException('Password is required');

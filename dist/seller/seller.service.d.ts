@@ -15,6 +15,7 @@ export declare class SellerService {
     private readonly salt;
     private readonly logger;
     constructor(sellerRepository: Repository<Seller>, productRepository: Repository<Product>, orderRepository: Repository<Order>, adminService: AdminService, mailService: MailService);
+    getAllSellers(): Promise<Seller[]>;
     createSeller(addSellerDto: AddSellerDto, adminId: number): Promise<Seller>;
     changeSellerStatus(id: number, status: 'active' | 'inactive', adminId: number): Promise<Seller>;
     findAll(): Promise<Seller[]>;

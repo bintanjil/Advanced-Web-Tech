@@ -28,14 +28,38 @@ let SellerController = class SellerController {
     constructor(sellerService) {
         this.sellerService = sellerService;
     }
-    async getAllSellers() {
-        return this.sellerService.findAll();
+    async getAllSellers(req) {
+        try {
+            const sellers = await this.sellerService.findAll();
+            return {
+                success: true,
+                data: sellers
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Failed to fetch sellers');
+        }
     }
     async getSellerById(id, req) {
         if (req.user.role === role_enum_1.Role.SELLER && req.user.sub !== id) {
             throw new common_1.ForbiddenException('You can only view your own profile');
         }
         return this.sellerService.getSellerById(id);
+    }
+    async registerSeller(addSellerDto, file) {
+        try {
+            if (file)
+                addSellerDto.fileName = file.filename;
+            const result = await this.sellerService.createSeller(addSellerDto, 0);
+            return {
+                success: true,
+                message: 'Seller registered successfully',
+                data: result
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException(error.message || 'Failed to register seller');
+        }
     }
     async createSeller(addSellerDto, file, req) {
         if (file)
@@ -64,7 +88,21 @@ let SellerController = class SellerController {
         return this.sellerService.searchSeller(query ?? '');
     }
     async getSellersByAdmin(req) {
-        return this.sellerService.getSellersByAdmin(req.user.sub);
+        try {
+            const sellers = await this.sellerService.getSellersByAdmin(req.user.sub);
+            console.log('Sellers found:', sellers);
+            return {
+                success: true,
+                data: sellers
+            };
+        }
+        catch (error) {
+            console.error('Error fetching sellers:', error);
+            if (error instanceof common_1.UnauthorizedException) {
+                throw error;
+            }
+            throw new common_1.UnauthorizedException('Failed to fetch sellers data');
+        }
     }
     async updateOwnSeller(dto, file, req) {
         if (file)
@@ -87,9 +125,11 @@ let SellerController = class SellerController {
 exports.SellerController = SellerController;
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], SellerController.prototype, "getAllSellers", null);
 __decorate([
@@ -101,6 +141,21 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], SellerController.prototype, "getSellerById", null);
+__decorate([
+    (0, common_1.Post)('registration'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './upload',
+            filename: (req, file, cb) => cb(null, Date.now() + '_' + file.originalname),
+        }),
+        limits: { fileSize: 2 * 1024 * 1024 },
+    })),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [add_seller_dto_1.AddSellerDto, Object]),
+    __metadata("design:returntype", Promise)
+], SellerController.prototype, "registerSeller", null);
 __decorate([
     (0, common_1.Post)(),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),

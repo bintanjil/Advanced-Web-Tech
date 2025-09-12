@@ -32,22 +32,32 @@ let AuthService = class AuthService {
             user = await this.sellerService.findByEmail(email);
             role = 'seller';
         }
-        if (!user)
-            throw new common_1.UnauthorizedException('No user found with this email');
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch)
-            throw new common_1.UnauthorizedException('Invalid password');
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
         const payload = {
             sub: user.id,
             email: user.email,
-            role: role,
+            role: role
         };
-        console.log('Auth payload:', payload);
+        const accessToken = await this.jwtService.signAsync(payload, {
+            expiresIn: '1h'
+        });
+        const refreshToken = await this.jwtService.signAsync(payload, {
+            expiresIn: '7d'
+        });
         return {
-            access_token: await this.jwtService.signAsync(payload, {
-                secret: auth_constants_1.jwtConstants.secret,
-                expiresIn: '1h',
-            }),
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: role
+            },
         };
     }
     async decodeToken(token) {
@@ -56,6 +66,34 @@ let AuthService = class AuthService {
         }
         catch (error) {
             throw new common_1.UnauthorizedException('Invalid token');
+        }
+    }
+    async refreshToken(refreshToken) {
+        try {
+            const decoded = await this.jwtService.verify(refreshToken, {
+                secret: auth_constants_1.jwtConstants.secret,
+            });
+            const { sub, email, role } = decoded;
+            const payload = {
+                sub,
+                email,
+                role,
+            };
+            const access_token = await this.jwtService.signAsync(payload, {
+                secret: auth_constants_1.jwtConstants.secret,
+                expiresIn: '1h',
+            });
+            const refresh_token = await this.jwtService.signAsync(payload, {
+                secret: auth_constants_1.jwtConstants.secret,
+                expiresIn: '7d',
+            });
+            return {
+                access_token,
+                refresh_token,
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Invalid refresh token');
         }
     }
 };

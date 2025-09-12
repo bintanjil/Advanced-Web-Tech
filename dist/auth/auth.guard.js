@@ -22,28 +22,66 @@ let AuthGuard = class AuthGuard {
         this.reflector = reflector;
     }
     async canActivate(context) {
+        const isPublic = this.reflector.getAllAndOverride('isPublic', [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (isPublic) {
+            return true;
+        }
         const request = context.switchToHttp().getRequest();
-        const token = this.extractTokenFromHeader(request);
+        const token = this.extractTokenFromCookies(request);
         if (!token) {
             throw new common_1.UnauthorizedException('No token provided');
         }
         try {
-            const payload = await this.jwtService.verifyAsync(token, { secret: auth_constants_1.jwtConstants.secret });
-            console.log('Token payload in guard:', payload);
+            const payload = await this.jwtService.verifyAsync(token, {
+                secret: auth_constants_1.jwtConstants.secret
+            });
             request.user = payload;
             const requiredRoles = this.reflector.get('roles', context.getHandler()) || [];
             if (requiredRoles.length && !requiredRoles.includes(payload.role)) {
                 throw new common_1.UnauthorizedException('Insufficient permissions');
             }
+            return true;
         }
         catch (error) {
+            const refreshToken = this.extractRefreshTokenFromCookies(request);
+            if (refreshToken) {
+                try {
+                    const newPayload = await this.jwtService.verifyAsync(refreshToken, {
+                        secret: auth_constants_1.jwtConstants.refreshSecret
+                    });
+                    const newAccessToken = await this.jwtService.signAsync({
+                        sub: newPayload.sub,
+                        email: newPayload.email,
+                        role: newPayload.role
+                    }, {
+                        secret: auth_constants_1.jwtConstants.secret,
+                        expiresIn: '1h'
+                    });
+                    const response = context.switchToHttp().getResponse();
+                    response.cookie('jwtToken', newAccessToken, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'lax',
+                        maxAge: 3600000
+                    });
+                    request.user = newPayload;
+                    return true;
+                }
+                catch (refreshError) {
+                    throw new common_1.UnauthorizedException('Session expired. Please login again.');
+                }
+            }
             throw new common_1.UnauthorizedException(error.message || 'Invalid token');
         }
-        return true;
     }
-    extractTokenFromHeader(request) {
-        const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined;
+    extractTokenFromCookies(request) {
+        return request.cookies['jwtToken'];
+    }
+    extractRefreshTokenFromCookies(request) {
+        return request.cookies['refreshToken'];
     }
 };
 exports.AuthGuard = AuthGuard;
