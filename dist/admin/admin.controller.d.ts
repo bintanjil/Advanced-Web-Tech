@@ -14,18 +14,12 @@ export declare class AdminController {
     updateAdmin(id: number, updateAdminDto: UpdateAdminDto): Promise<import("./admin.entity").Admin>;
     changeStatus(id: number, status: 'active' | 'inactive'): Promise<import("./admin.entity").Admin>;
     olderThan(age: number): Promise<import("./admin.entity").Admin[]>;
-    getInactiveAdmins(): Promise<import("./admin.entity").Admin[]>;
-    deleteAdmin(id: number): Promise<{
-        message: string;
-    }>;
+    getInactiveAdmins(req: any): Promise<import("./admin.entity").Admin[]>;
+    deleteAdmin(id: number): Promise<void>;
     addAdmin(addAdminDto: AddAdminDto, file: Express.Multer.File): Promise<import("./admin.entity").Admin>;
     createSeller(dto: AddSellerDto, req: any, file?: Express.Multer.File): Promise<import("../seller/seller.entity").Seller>;
     mySellers(req: any): Promise<import("../seller/seller.entity").Seller[]>;
     searchAllSellers(query: string, req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getInactiveSellers(req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getActiveSeller(req: any): Promise<import("../seller/seller.entity").Seller[]>;
-    getAllSellers(req: any): Promise<{
-        success: boolean;
-        data: import("../seller/seller.entity").Seller[];
-    }>;
 }

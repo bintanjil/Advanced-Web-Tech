@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
     Body,
     Controller,
     Delete,
@@ -48,7 +49,7 @@ export class AdminController {
       return await this.adminService.findAll();
     }
 
-    @Get("byId/:id")
+    @Get(":id")
     @UseGuards(AuthGuard)
     @Roles(Role.ADMIN)
     async getAdminById(@Param("id", ParseIntPipe) id: number) {
@@ -81,18 +82,31 @@ export class AdminController {
     async olderThan(@Param('age', ParseIntPipe) age: number) {
     return await this.adminService.getOlderThan(age);
     }
-    @Get('inactive')
-    async getInactiveAdmins(){
-      return await this.adminService.getInactive();
-    }
+    
+@Get('inactive')
+@UseGuards(AuthGuard)
+@Roles(Role.ADMIN)
+async getInactiveAdmins(@Request() req) {
+  console.log('Fetching inactive admins...');
+  console.log('User making request:', req.user);
+  
+  try {
+    const inactiveAdmins = await this.adminService.getInactive();
+    console.log('Found inactive admins:', inactiveAdmins.length);
+    return inactiveAdmins;
+  } catch (error) {
+    console.error('Error in getInactiveAdmins:', error);
+    throw new BadRequestException('Failed to fetch inactive admins');
+  }
+}
 
-    @Delete(':id')
+    @Delete(":id")
     @UseGuards(AuthGuard)
     @Roles(Role.ADMIN)
-    async deleteAdmin(@Param('id', ParseIntPipe) id : number){
-      await this.adminService.deleteAdmin(id);
-      return { message: `Admin with id ${id} deleted successfully` };
+    async deleteAdmin( @Param("id", ParseIntPipe) id: number) {
+        return await this.adminService.deleteAdmin(id);
     }
+
 
     @Post('createAdmin')
     @UseGuards(AuthGuard)
@@ -193,22 +207,5 @@ async getActiveSeller(@Request() req) {
   return this.sellerService.getActiveSellers();
 }
 
-@Get('sellers')
-@UseGuards(AuthGuard)
-@Roles(Role.ADMIN)
-async getAllSellers(@Request() req) {
-  try {
-    if (req.user.role !== 'admin') throw new UnauthorizedException('Admin access required');
-    const sellers = await this.sellerService.getAllSellers();
-    console.log('Fetched sellers:', sellers); // Debug log
-    return {
-      success: true,
-      data: sellers
-    };
-  } catch (error) {
-    console.error('Error in getAllSellers:', error);
-    throw error;
-  }
-}
 
 }

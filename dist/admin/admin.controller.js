@@ -52,12 +52,21 @@ let AdminController = class AdminController {
     async olderThan(age) {
         return await this.adminService.getOlderThan(age);
     }
-    async getInactiveAdmins() {
-        return await this.adminService.getInactive();
+    async getInactiveAdmins(req) {
+        console.log('Fetching inactive admins...');
+        console.log('User making request:', req.user);
+        try {
+            const inactiveAdmins = await this.adminService.getInactive();
+            console.log('Found inactive admins:', inactiveAdmins.length);
+            return inactiveAdmins;
+        }
+        catch (error) {
+            console.error('Error in getInactiveAdmins:', error);
+            throw new common_1.BadRequestException('Failed to fetch inactive admins');
+        }
     }
     async deleteAdmin(id) {
-        await this.adminService.deleteAdmin(id);
-        return { message: `Admin with id ${id} deleted successfully` };
+        return await this.adminService.deleteAdmin(id);
     }
     async addAdmin(addAdminDto, file) {
         console.log(file);
@@ -95,22 +104,6 @@ let AdminController = class AdminController {
             throw new common_1.UnauthorizedException();
         return this.sellerService.getActiveSellers();
     }
-    async getAllSellers(req) {
-        try {
-            if (req.user.role !== 'admin')
-                throw new common_1.UnauthorizedException('Admin access required');
-            const sellers = await this.sellerService.getAllSellers();
-            console.log('Fetched sellers:', sellers);
-            return {
-                success: true,
-                data: sellers
-            };
-        }
-        catch (error) {
-            console.error('Error in getAllSellers:', error);
-            throw error;
-        }
-    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -123,7 +116,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getAllAdmins", null);
 __decorate([
-    (0, common_1.Get)("byId/:id"),
+    (0, common_1.Get)(":id"),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
@@ -160,15 +153,18 @@ __decorate([
 ], AdminController.prototype, "olderThan", null);
 __decorate([
     (0, common_1.Get)('inactive'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getInactiveAdmins", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Delete)(":id"),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
@@ -256,15 +252,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getActiveSeller", null);
-__decorate([
-    (0, common_1.Get)('sellers'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
-    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AdminController.prototype, "getAllSellers", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)("admin"),
     __metadata("design:paramtypes", [admin_service_1.AdminService,
