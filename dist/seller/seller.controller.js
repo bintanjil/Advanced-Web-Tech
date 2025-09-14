@@ -117,6 +117,9 @@ let SellerController = class SellerController {
     async getActiveSellers() {
         return this.sellerService.getActiveSellers();
     }
+    async getInactiveSellers() {
+        return this.sellerService.getInactiveSellers();
+    }
     async getOwnProfile(req) {
         return this.sellerService.getSellerById(req.user.sub);
     }
@@ -253,6 +256,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], SellerController.prototype, "getActiveSellers", null);
+__decorate([
+    (0, common_1.Get)('inactive/list'),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], SellerController.prototype, "getInactiveSellers", null);
 __decorate([
     (0, common_1.Get)('me'),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.SELLER),

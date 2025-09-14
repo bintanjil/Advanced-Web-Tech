@@ -32,6 +32,7 @@ export declare class SellerController {
     }>;
     updateOwnSeller(dto: UpdateSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
     getActiveSellers(): Promise<import("./seller.entity").Seller[]>;
+    getInactiveSellers(): Promise<import("./seller.entity").Seller[]>;
     getOwnProfile(req: any): Promise<import("./seller.entity").Seller>;
     getOwnProducts(req: any): Promise<import("../product/product.entity").Product[]>;
     getOwnOrders(req: any): Promise<import("../order/order.entity").Order[]>;

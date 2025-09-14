@@ -27,6 +27,7 @@ import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { RolesGuard } from '../auth/roles.guard';
 import { use } from 'passport';
+import { get } from 'http';
 
 @Controller('seller')
 @UseGuards(AuthGuard, RolesGuard)
@@ -209,6 +210,11 @@ export class SellerController {
   @Roles(Role.ADMIN)
   async getActiveSellers() {
     return this.sellerService.getActiveSellers();
+  }
+  @Get('inactive/list')
+  @Roles(Role.ADMIN)
+  async getInactiveSellers() {
+    return this.sellerService.getInactiveSellers();
   }
 
   @Get('me')
