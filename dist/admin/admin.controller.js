@@ -54,7 +54,7 @@ let AdminController = class AdminController {
         return await this.adminService.getOlderThan(age);
     }
     async getInactiveAdmins(req) {
-        if (req.user.role !== 'admin')
+        if (req.user.role?.toLowerCase() !== 'admin')
             throw new common_1.UnauthorizedException();
         return this.adminService.getInactive();
     }
@@ -146,7 +146,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "olderThan", null);
 __decorate([
-    (0, common_1.Get)('inactive'),
+    (0, common_1.Get)('inactive/admins'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.ADMIN),
     __param(0, (0, common_1.Request)()),

@@ -76,7 +76,7 @@ export class AuthGuard implements CanActivate {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 3600000 // 1 hour
+            maxAge: 3600000 
           });
 
           // Store the new payload in request

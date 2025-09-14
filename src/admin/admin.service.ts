@@ -25,7 +25,7 @@ export class AdminService {
     return await this.adminRepository.find({
         where: { status: 'inactive' }
     });
-}
+  }
 
     async getAdminById(id: number):Promise<Admin> {
         const admin = await this.adminRepository.findOne({where:{id}})

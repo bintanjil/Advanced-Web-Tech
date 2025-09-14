@@ -84,13 +84,14 @@ export class AdminController {
     return await this.adminService.getOlderThan(age);
     }
     
-@Get('inactive')
+@Get('inactive/admins')
 @UseGuards(AuthGuard)
 @Roles(Role.ADMIN)
 async getInactiveAdmins(@Request() req) {
-  if (req.user.role !== 'admin') throw new UnauthorizedException();
+  if (req.user.role?.toLowerCase() !== 'admin') throw new UnauthorizedException();
   return this.adminService.getInactive();
 }
+
     @Delete(":id")
     @UseGuards(AuthGuard)
     @Roles(Role.ADMIN)
