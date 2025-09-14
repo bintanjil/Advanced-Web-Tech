@@ -32,6 +32,11 @@ let AdminService = AdminService_1 = class AdminService {
     async findAll() {
         return this.adminRepository.find();
     }
+    async getInactive() {
+        return await this.adminRepository.find({
+            where: { status: 'inactive' }
+        });
+    }
     async getAdminById(id) {
         const admin = await this.adminRepository.findOne({ where: { id } });
         if (!admin)
@@ -87,9 +92,6 @@ let AdminService = AdminService_1 = class AdminService {
     async deleteAdmin(id) {
         const admin = await this.getAdminById(id);
         await this.adminRepository.remove(admin);
-    }
-    async getInactive() {
-        return await this.adminRepository.find({ where: { status: 'inactive' } });
     }
     async getOlderThan(age) {
         return await this.adminRepository.createQueryBuilder('admin').where('admin.age> :age', { age }).getMany();

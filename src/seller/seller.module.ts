@@ -9,12 +9,14 @@ import { AdminModule } from 'src/admin/admin.module';
 import { MailModule } from 'src/mail/mail.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/auth/auth.constants';
+import { PusherModule } from '../pusher/pusher.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Seller, Product, Order]),
     forwardRef(() => AdminModule),
     MailModule,
+    PusherModule,
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1h' },

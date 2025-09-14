@@ -47,23 +47,16 @@ let AdminController = class AdminController {
         return await this.adminService.updateAdmin(id, updateAdminDto);
     }
     async changeStatus(id, status) {
-        return await this.adminService.changeStatus(id, status);
+        const admin = await this.adminService.changeStatus(id, status);
+        return admin;
     }
     async olderThan(age) {
         return await this.adminService.getOlderThan(age);
     }
     async getInactiveAdmins(req) {
-        console.log('Fetching inactive admins...');
-        console.log('User making request:', req.user);
-        try {
-            const inactiveAdmins = await this.adminService.getInactive();
-            console.log('Found inactive admins:', inactiveAdmins.length);
-            return inactiveAdmins;
-        }
-        catch (error) {
-            console.error('Error in getInactiveAdmins:', error);
-            throw new common_1.BadRequestException('Failed to fetch inactive admins');
-        }
+        if (req.user.role !== 'admin')
+            throw new common_1.UnauthorizedException();
+        return this.adminService.getInactive();
     }
     async deleteAdmin(id) {
         return await this.adminService.deleteAdmin(id);
@@ -73,7 +66,8 @@ let AdminController = class AdminController {
         if (file) {
             addAdminDto.fileName = file.filename;
         }
-        return await this.adminService.createAdmin(addAdminDto);
+        const admin = await this.adminService.createAdmin(addAdminDto);
+        return admin;
     }
     async createSeller(dto, req, file) {
         if (req.user.role !== 'admin') {

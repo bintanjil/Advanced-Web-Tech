@@ -33,7 +33,7 @@ import { MailService } from "src/mail/mail.service";
 export class AdminController {
     constructor(
       private readonly adminService: AdminService,
-      private readonly sellerService : SellerService,
+      private readonly sellerService: SellerService,
       private readonly mailService: MailService
     ) {}
 
@@ -75,7 +75,8 @@ export class AdminController {
     @UseGuards(AuthGuard)
     @Roles(Role.ADMIN)
     async changeStatus(@Param('id', ParseIntPipe) id: number, @Body('status') status: 'active' | 'inactive') {
-    return await this.adminService.changeStatus(id, status);
+      const admin = await this.adminService.changeStatus(id, status);
+      return admin;
     }
 
     @Get('upper/:age')
@@ -87,19 +88,9 @@ export class AdminController {
 @UseGuards(AuthGuard)
 @Roles(Role.ADMIN)
 async getInactiveAdmins(@Request() req) {
-  console.log('Fetching inactive admins...');
-  console.log('User making request:', req.user);
-  
-  try {
-    const inactiveAdmins = await this.adminService.getInactive();
-    console.log('Found inactive admins:', inactiveAdmins.length);
-    return inactiveAdmins;
-  } catch (error) {
-    console.error('Error in getInactiveAdmins:', error);
-    throw new BadRequestException('Failed to fetch inactive admins');
-  }
+  if (req.user.role !== 'admin') throw new UnauthorizedException();
+  return this.adminService.getInactive();
 }
-
     @Delete(":id")
     @UseGuards(AuthGuard)
     @Roles(Role.ADMIN)
@@ -137,7 +128,8 @@ async addAdmin(
   if (file) {
     addAdminDto.fileName = file.filename; 
   }
-  return await this.adminService.createAdmin(addAdminDto);
+  const admin = await this.adminService.createAdmin(addAdminDto);
+  return admin;
 }
 // @Get('check')
 // // @UseGuards(AuthGuard)

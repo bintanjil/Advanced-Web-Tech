@@ -8,14 +8,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PusherModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
 const pusher_service_1 = require("./pusher.service");
 let PusherModule = class PusherModule {
 };
 exports.PusherModule = PusherModule;
 exports.PusherModule = PusherModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule],
         providers: [pusher_service_1.PusherService],
         exports: [pusher_service_1.PusherService],
     })

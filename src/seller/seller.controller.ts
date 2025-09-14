@@ -31,7 +31,9 @@ import { use } from 'passport';
 @Controller('seller')
 @UseGuards(AuthGuard, RolesGuard)
 export class SellerController {
-  constructor(private readonly sellerService: SellerService) {}
+  constructor(
+    private readonly sellerService: SellerService
+  ) {}
 
  
   @Get()
@@ -138,7 +140,12 @@ export class SellerController {
     @Body('status') status: 'active' | 'inactive',
     @Request() req,
   ) {
-    return this.sellerService.changeSellerStatus(id, status, req.user.sub);
+    const seller = await this.sellerService.changeSellerStatus(id, status, req.user.sub);
+    return {
+      success: true,
+      message: `Seller status updated to ${status}`,
+      data: seller
+    };
   }
 
   @Delete(':id')

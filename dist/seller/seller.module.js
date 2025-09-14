@@ -18,6 +18,7 @@ const admin_module_1 = require("../admin/admin.module");
 const mail_module_1 = require("../mail/mail.module");
 const jwt_1 = require("@nestjs/jwt");
 const auth_constants_1 = require("../auth/auth.constants");
+const pusher_module_1 = require("../pusher/pusher.module");
 let SellerModule = class SellerModule {
 };
 exports.SellerModule = SellerModule;
@@ -27,6 +28,7 @@ exports.SellerModule = SellerModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([seller_entity_1.Seller, product_entity_1.Product, order_entity_1.Order]),
             (0, common_1.forwardRef)(() => admin_module_1.AdminModule),
             mail_module_1.MailModule,
+            pusher_module_1.PusherModule,
             jwt_1.JwtModule.register({
                 secret: auth_constants_1.jwtConstants.secret,
                 signOptions: { expiresIn: '1h' },

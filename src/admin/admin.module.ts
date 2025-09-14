@@ -8,6 +8,7 @@ import { SellerModule } from 'src/seller/seller.module';
 import { MailModule } from 'src/mail/mail.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from 'src/auth/auth.constants';
+import { PusherModule } from 'src/pusher/pusher.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { jwtConstants } from 'src/auth/auth.constants';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1h' },
     }),
+    PusherModule,
   ],
   controllers: [AdminController],
   providers: [AdminService, AuthService],

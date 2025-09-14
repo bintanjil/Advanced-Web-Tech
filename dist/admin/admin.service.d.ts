@@ -10,12 +10,12 @@ export declare class AdminService {
     private readonly logger;
     constructor(adminRepository: Repository<Admin>, mailService: MailService);
     findAll(): Promise<Admin[]>;
+    getInactive(): Promise<Admin[]>;
     getAdminById(id: number): Promise<Admin>;
     createAdmin(addAdminDto: AddAdminDto): Promise<Admin>;
     updateAdmin(id: number, updateAdminDto: UpdateAdminDto): Promise<Admin>;
     changeStatus(id: number, status: 'active' | 'inactive'): Promise<Admin>;
     deleteAdmin(id: number): Promise<void>;
-    getInactive(): Promise<Admin[]>;
     getOlderThan(age: number): Promise<Admin[]>;
     findByEmail(email: string): Promise<any>;
     getSellersByAdmin(adminId: number): Promise<import("../seller/seller.entity").Seller[]>;

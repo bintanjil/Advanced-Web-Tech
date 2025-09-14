@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AdminModule } from './admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
+import { PusherModule } from './pusher/pusher.module';
 import { ProductService } from './product/product.service';
 import { ProductModule } from './product/product.module';
 import { CustomerModule } from './customer/customer.module';
@@ -37,10 +38,15 @@ import { Category } from './category/category.entity';
       synchronize:true,
 
 
-    })
-
-    ,
-    AdminModule, ProductModule, CustomerModule, AuthModule, MailModule, OrderModule],
+    }),
+    AdminModule, 
+    ProductModule, 
+    CustomerModule, 
+    AuthModule, 
+    MailModule, 
+    OrderModule,
+    PusherModule
+  ],
   controllers: [],
   providers: [],
   

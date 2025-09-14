@@ -98,9 +98,9 @@ export class SellerService {
     if (!seller) throw new NotFoundException('Seller not found');
 
     // Admin can only modify their own sellers
-    if (!seller.admin || seller.admin.id !== adminId) {
-      throw new UnauthorizedException('You can only update your own sellers');
-    }
+    // if (!seller.admin || seller.admin.id !== adminId) {
+    //   throw new UnauthorizedException('You can only update your own sellers');
+    // }
 
     seller.status = status;
     return this.sellerRepository.save(seller);
@@ -119,10 +119,6 @@ export class SellerService {
   async updateSeller(id: number, updateSellerdto: UpdateSellerDto, adminId: number): Promise<Seller> {
     const seller = await this.sellerRepository.findOne({ where: { id }, relations: ['admin'] });
     if (!seller) throw new NotFoundException('Seller not found');
-
-    if (!seller.admin || seller.admin.id !== adminId) {
-      throw new UnauthorizedException('You can only update your own sellers');
-    }
 
     if (updateSellerdto.email && updateSellerdto.email !== seller.email) {
       const exists = await this.sellerRepository.findOne({ where: { email: updateSellerdto.email } });
@@ -161,12 +157,7 @@ export class SellerService {
     });
   
     if (!seller) throw new NotFoundException('Seller not found');
-  
-    if (!seller.admin || seller.admin.id !== adminId) {
-      throw new UnauthorizedException(
-        'You can only delete sellers created by you'
-      );
-  }
+
 
   await this.sellerRepository.delete(id);
 }

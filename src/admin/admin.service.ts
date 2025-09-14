@@ -21,6 +21,12 @@ export class AdminService {
         return this.adminRepository.find();
     }
 
+    async getInactive(): Promise<Admin[]> {
+    return await this.adminRepository.find({
+        where: { status: 'inactive' }
+    });
+}
+
     async getAdminById(id: number):Promise<Admin> {
         const admin = await this.adminRepository.findOne({where:{id}})
         if (!admin) throw new NotFoundException("Admin not found");
@@ -90,9 +96,7 @@ export class AdminService {
         await this.adminRepository.remove(admin);
 
     }
-    async getInactive():Promise<Admin[]>{
-        return await this.adminRepository.find({where:{status:'inactive'}});
-    }
+   
     async getOlderThan(age:number):Promise<Admin[]>{
         return await this.adminRepository.createQueryBuilder('admin').where('admin.age> :age',{age}).getMany();
     }

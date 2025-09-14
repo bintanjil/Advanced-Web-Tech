@@ -12,35 +12,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PusherService = void 0;
 const common_1 = require("@nestjs/common");
 const Pusher = require("pusher");
-const config_1 = require("@nestjs/config");
 let PusherService = class PusherService {
-    configService;
     pusher;
-    constructor(configService) {
-        this.configService = configService;
+    constructor() {
         this.pusher = new Pusher({
-            appId: this.configService.get('PUSHER_APP_ID'),
-            key: this.configService.get('PUSHER_APP_KEY'),
-            secret: this.configService.get('PUSHER_APP_SECRET'),
-            cluster: this.configService.get('PUSHER_CLUSTER'),
+            appId: process.env.PUSHER_APP_ID || '2050466',
+            key: process.env.PUSHER_KEY || 'cdfc8abb8d9230af175c',
+            secret: process.env.PUSHER_SECRET || '8174bc301577c834f223',
+            cluster: process.env.PUSHER_CLUSTER || 'ap1',
             useTLS: true,
         });
     }
     async trigger(channel, event, data) {
         try {
-            await this.pusher.trigger(channel, event, data);
+            const eventData = {
+                ...data,
+                timestamp: new Date().toISOString()
+            };
+            await this.pusher.trigger(channel, event, eventData);
+            console.log('Successfully triggered Pusher event:', {
+                channel,
+                event,
+                data: eventData
+            });
         }
         catch (error) {
-            console.error('Pusher trigger error:', error);
+            console.error('Error triggering Pusher event:', {
+                error,
+                channel,
+                event,
+                data
+            });
+            if (error.status === 401) {
+                console.error('Pusher authentication failed. Please check your credentials.');
+            }
             throw error;
         }
     }
     async triggerBatch(events) {
         try {
-            await this.pusher.triggerBatch(events);
+            await this.pusher.triggerBatch(events.map(({ channel, event, data }) => ({
+                channel,
+                name: event,
+                data,
+            })));
         }
         catch (error) {
-            console.error('Pusher batch trigger error:', error);
+            console.error('Error triggering Pusher batch events:', error);
             throw error;
         }
     }
@@ -48,6 +66,6 @@ let PusherService = class PusherService {
 exports.PusherService = PusherService;
 exports.PusherService = PusherService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [])
 ], PusherService);
 //# sourceMappingURL=pusher.service.js.map

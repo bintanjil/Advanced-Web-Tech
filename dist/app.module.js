@@ -10,6 +10,7 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const admin_module_1 = require("./admin/admin.module");
 const config_1 = require("@nestjs/config");
+const pusher_module_1 = require("./pusher/pusher.module");
 const product_module_1 = require("./product/product.module");
 const customer_module_1 = require("./customer/customer.module");
 const typeorm_1 = require("@nestjs/typeorm");
@@ -45,7 +46,13 @@ exports.AppModule = AppModule = __decorate([
                 entities: [admin_entity_1.Admin, customer_entity_1.Customer, seller_entity_1.Seller, product_entity_1.Product, order_entity_1.Order, order_item_entity_1.OrderItem, address_entity_1.Address, review_entity_1.Review, discount_entity_1.Discount, category_entity_1.Category],
                 synchronize: true,
             }),
-            admin_module_1.AdminModule, product_module_1.ProductModule, customer_module_1.CustomerModule, auth_module_1.AuthModule, mail_module_1.MailModule, order_module_1.OrderModule
+            admin_module_1.AdminModule,
+            product_module_1.ProductModule,
+            customer_module_1.CustomerModule,
+            auth_module_1.AuthModule,
+            mail_module_1.MailModule,
+            order_module_1.OrderModule,
+            pusher_module_1.PusherModule
         ],
         controllers: [],
         providers: [],

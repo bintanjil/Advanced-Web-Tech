@@ -75,7 +75,12 @@ let SellerController = class SellerController {
         return this.sellerService.updateSeller(id, dto, req.user.sub);
     }
     async changeSellerStatus(id, status, req) {
-        return this.sellerService.changeSellerStatus(id, status, req.user.sub);
+        const seller = await this.sellerService.changeSellerStatus(id, status, req.user.sub);
+        return {
+            success: true,
+            message: `Seller status updated to ${status}`,
+            data: seller
+        };
     }
     async deleteSeller(id, req) {
         await this.sellerService.deleteSeller(id, req.user.sub);

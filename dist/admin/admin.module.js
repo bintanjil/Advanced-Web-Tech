@@ -17,6 +17,7 @@ const seller_module_1 = require("../seller/seller.module");
 const mail_module_1 = require("../mail/mail.module");
 const jwt_1 = require("@nestjs/jwt");
 const auth_constants_1 = require("../auth/auth.constants");
+const pusher_module_1 = require("../pusher/pusher.module");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -30,6 +31,7 @@ exports.AdminModule = AdminModule = __decorate([
                 secret: auth_constants_1.jwtConstants.secret,
                 signOptions: { expiresIn: '1h' },
             }),
+            pusher_module_1.PusherModule,
         ],
         controllers: [admin_controller_1.AdminController],
         providers: [admin_service_1.AdminService, auth_service_1.AuthService],

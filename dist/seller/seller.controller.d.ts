@@ -16,7 +16,11 @@ export declare class SellerController {
     }>;
     createSeller(addSellerDto: AddSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
     updateSeller(id: number, dto: UpdateSellerDto, file: Express.Multer.File, req: any): Promise<import("./seller.entity").Seller>;
-    changeSellerStatus(id: number, status: 'active' | 'inactive', req: any): Promise<import("./seller.entity").Seller>;
+    changeSellerStatus(id: number, status: 'active' | 'inactive', req: any): Promise<{
+        success: boolean;
+        message: string;
+        data: import("./seller.entity").Seller;
+    }>;
     deleteSeller(id: number, req: any): Promise<{
         success: boolean;
         message: string;
