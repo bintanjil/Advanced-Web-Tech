@@ -42,7 +42,7 @@ exports.AppModule = AppModule = __decorate([
                 port: 5432,
                 username: 'postgres',
                 password: 'admin',
-                database: 'ecommerce',
+                database: 'tcommerce',
                 entities: [admin_entity_1.Admin, customer_entity_1.Customer, seller_entity_1.Seller, product_entity_1.Product, order_entity_1.Order, order_item_entity_1.OrderItem, address_entity_1.Address, review_entity_1.Review, discount_entity_1.Discount, category_entity_1.Category],
                 synchronize: true,
             }),

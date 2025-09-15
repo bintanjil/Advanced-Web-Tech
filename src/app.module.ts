@@ -33,7 +33,7 @@ import { Category } from './category/category.entity';
       port: 5432,
       username:'postgres',
       password:'admin',
-      database:'ecommerce',
+      database:'tcommerce',
       entities:[Admin, Customer, Seller, Product, Order, OrderItem, Address, Review, Discount, Category],
       synchronize:true,
 

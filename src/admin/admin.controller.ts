@@ -199,6 +199,35 @@ async getActiveSeller(@Request() req) {
   if (req.user.role !== 'admin') throw new UnauthorizedException();
   return this.sellerService.getActiveSellers();
 }
-
+@Post("add/admin")
+@UseInterceptors(
+    FileInterceptor('myfile', {
+    storage: diskStorage({
+      destination: './upload',
+      filename: (req, file, cb) => {
+        cb(null, Date.now() + '_' + file.originalname);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Wrong Format'), false);
+      }
+    },
+    limits: { fileSize: 2 * 1024 * 1024 },
+  }),
+)
+async createAdmin(
+  @Body() addAdminDto: AddAdminDto,
+  @UploadedFile() file: Express.Multer.File,
+    ) {
+        console.log(file);
+  if (file) {
+    addAdminDto.fileName = file.filename; 
+  }
+  const admin = await this.adminService.createAdmin(addAdminDto);
+  return admin;
+}
 
 }

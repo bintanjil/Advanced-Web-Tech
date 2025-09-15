@@ -22,4 +22,5 @@ export declare class AdminController {
     searchAllSellers(query: string, req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getInactiveSellers(req: any): Promise<import("../seller/seller.entity").Seller[]>;
     getActiveSeller(req: any): Promise<import("../seller/seller.entity").Seller[]>;
+    createAdmin(addAdminDto: AddAdminDto, file: Express.Multer.File): Promise<import("./admin.entity").Admin>;
 }

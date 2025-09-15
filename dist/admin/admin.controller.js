@@ -98,6 +98,14 @@ let AdminController = class AdminController {
             throw new common_1.UnauthorizedException();
         return this.sellerService.getActiveSellers();
     }
+    async createAdmin(addAdminDto, file) {
+        console.log(file);
+        if (file) {
+            addAdminDto.fileName = file.filename;
+        }
+        const admin = await this.adminService.createAdmin(addAdminDto);
+        return admin;
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -246,6 +254,31 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getActiveSeller", null);
+__decorate([
+    (0, common_1.Post)("add/admin"),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('myfile', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './upload',
+            filename: (req, file, cb) => {
+                cb(null, Date.now() + '_' + file.originalname);
+            },
+        }),
+        fileFilter: (req, file, cb) => {
+            if (file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
+                cb(null, true);
+            }
+            else {
+                cb(new Error('Wrong Format'), false);
+            }
+        },
+        limits: { fileSize: 2 * 1024 * 1024 },
+    })),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [add_admin_dto_1.AddAdminDto, Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "createAdmin", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)("admin"),
     __metadata("design:paramtypes", [admin_service_1.AdminService,
