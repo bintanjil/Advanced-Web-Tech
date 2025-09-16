@@ -4,6 +4,7 @@ import { CustomerService } from './customer.service';
 import { CustomerController } from './customer.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderModule } from '../order/order.module';
+import { MailModule } from '../mail/mail.module';
 import { Customer } from './customer.entity';
 import { Address } from './address.entity';
 
@@ -11,6 +12,7 @@ import { Address } from './address.entity';
     imports: [
         TypeOrmModule.forFeature([Customer, Address]),
         forwardRef(() => OrderModule),
+        MailModule,
     ],
     controllers: [CustomerController],
     providers: [CustomerService],

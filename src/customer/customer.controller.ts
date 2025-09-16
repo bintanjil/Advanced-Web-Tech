@@ -16,13 +16,16 @@ import {
   ConflictException,
 } from "@nestjs/common";
 import { CustomerService } from "./customer.service";
+import { MailService } from "../mail/mail.service";
 import { AddCustomerDto } from "./dto/add-customer.dto";
 import { UpdateCustomerDto } from "./dto/update-customer.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
+import * as multer from "multer";
 import { Express } from "express";
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { extname } from 'path';
 import { UpdateAddressDto } from "./dto/update-address.dto";
 import { AddAddressDto } from "./dto/add-address.dto";
@@ -30,7 +33,10 @@ import { OrderItemDto } from "src/order/dto/add-order.dto";
 
 @Controller('customer')
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) {}
+  constructor(
+    private readonly customerService: CustomerService,
+    private readonly mailService: MailService,
+  ) {}
     
   @Get()
   @UseGuards(AuthGuard)
@@ -109,10 +115,25 @@ export class CustomerController {
     }
   }
 
+  @Public()
   @Post('create')
   async create(@Body() addCustomerDto: AddCustomerDto) {
     try {
       const customer = await this.customerService.createCustomer(addCustomerDto);
+      
+      // Send welcome email asynchronously (don't wait for it to complete)
+      this.mailService.sendCustomerWelcomeEmail(customer.email, customer.fullName)
+        .then((result) => {
+          if (result.success) {
+            console.log(`Welcome email sent successfully to ${customer.email}`);
+          } else {
+            console.error(`Failed to send welcome email to ${customer.email}:`, result.error);
+          }
+        })
+        .catch((error) => {
+          console.error(`Error sending welcome email to ${customer.email}:`, error);
+        });
+
       return { message: 'Customer created successfully', customer };
     } catch (error) {
       if (error.code === '23505') { // PostgreSQL unique violation error code
@@ -136,7 +157,7 @@ export class CustomerController {
           return cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
       fileFilter: (req, file, cb) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
           return cb(new BadRequestException('Only image files are allowed'), false);
@@ -231,8 +252,74 @@ export class CustomerController {
       throw new BadRequestException('Failed to remove address');
     }
   }
+
+  @Public()
+  @Post('add')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+      destination: './upload',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '_' + file.originalname;
+        cb(null, uniqueSuffix);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    }),
+  )
+  async addCustomer(
+    @Body() addCustomerDto: AddCustomerDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    try {
+      // If file is uploaded, add fileName to DTO
+      if (file) {
+        addCustomerDto.fileName = file.filename;
+      }
+      
+      const customer = await this.customerService.createCustomer(addCustomerDto);
+      
+      // Send welcome email asynchronously (don't wait for it to complete)
+      this.mailService.sendCustomerWelcomeEmail(customer.email, customer.fullName)
+        .then((result) => {
+          if (result.success) {
+            console.log(`Welcome email sent successfully to ${customer.email}`);
+          } else {
+            console.error(`Failed to send welcome email to ${customer.email}:`, result.error);
+          }
+        })
+        .catch((error) => {
+          console.error(`Error sending welcome email to ${customer.email}:`, error);
+        });
+      
+      // Remove password from response
+      const { password, ...customerResponse } = customer;
+      
+      return { message: 'Customer created successfully', customer: customerResponse };
+    } catch (error) {
+      // Handle database constraint errors
+      if (error.code === '23505') {
+        throw new ConflictException('Username or email already exists');
+      }
+      
+      // Re-throw ConflictExceptions from the service (username/email exists)
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      
+      console.error('Customer creation error:', error);
+      throw new BadRequestException(error.message || 'Customer creation failed');
+    }
+  }
 }
 
 
-    
+
 

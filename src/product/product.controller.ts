@@ -22,18 +22,22 @@ import { diskStorage } from 'multer';
 import { Express } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from 'src/auth/public.decorator';
+
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   // Public endpoint - anyone can view products
+  @Public()
   @Get()
   async getAllProducts() {
     return await this.productService.getAllProducts();
   }
 
   // Get product by ID - public
+  @Public()
   @Get(':id')
   async getProductById(@Param('id', ParseIntPipe) id: number) {
     return await this.productService.getProductWithSeller(id);
@@ -59,7 +63,7 @@ export class ProductController {
         if (file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) cb(null, true);
         else cb(new Error('Only image files are allowed'), false);
       },
-      limits: { fileSize: 2 * 1024 * 1024 },
+      limits: { fileSize: 5 * 1024 * 1024 },
       storage: diskStorage({
         destination: './upload',
         filename: (req, file, cb) => {
@@ -90,7 +94,7 @@ export class ProductController {
         if (file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) cb(null, true);
         else cb(new Error('Only image files are allowed'), false);
       },
-      limits: { fileSize: 2 * 1024 * 1024 },
+      limits: { fileSize: 5 * 1024 * 1024 },
       storage: diskStorage({
         destination: './upload',
         filename: (req, file, cb) => {

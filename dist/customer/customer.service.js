@@ -18,22 +18,24 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const customer_entity_1 = require("./customer.entity");
 const address_entity_1 = require("./address.entity");
+const bcrypt = require("bcrypt");
 let CustomerService = class CustomerService {
     customerRepository;
     addressRepository;
+    salt = 10;
     constructor(customerRepository, addressRepository) {
         this.customerRepository = customerRepository;
         this.addressRepository = addressRepository;
     }
     async findAll() {
         return await this.customerRepository.find({
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
     }
     async getCustomerById(id) {
         const customer = await this.customerRepository.findOne({
             where: { id },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'orders.orderItems', 'orders.orderItems.product', 'reviews']
         });
         if (!customer) {
             throw new common_1.NotFoundException("Customer not found");
@@ -43,11 +45,17 @@ let CustomerService = class CustomerService {
     async findByUsername(username) {
         const customer = await this.customerRepository.findOne({
             where: { username },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
         if (!customer) {
             throw new common_1.NotFoundException(`Customer with username '${username}' not found`);
         }
+        return customer;
+    }
+    async findByEmail(email) {
+        const customer = await this.customerRepository.findOne({
+            where: { email }
+        });
         return customer;
     }
     async findByFullNameSubstring(substring) {
@@ -55,7 +63,7 @@ let CustomerService = class CustomerService {
             where: {
                 fullName: (0, typeorm_2.Like)(`%${substring}%`)
             },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
     }
     async removeCustomer(id) {
@@ -75,12 +83,32 @@ let CustomerService = class CustomerService {
         });
         return !!existingCustomer;
     }
+    async emailExists(email) {
+        const existingCustomer = await this.customerRepository.findOne({
+            where: { email }
+        });
+        return !!existingCustomer;
+    }
     async createCustomer(addCustomerDto) {
         const usernameExists = await this.usernameExists(addCustomerDto.username);
         if (usernameExists) {
             throw new common_1.ConflictException(`Username '${addCustomerDto.username}' already exists`);
         }
-        const customer = this.customerRepository.create(addCustomerDto);
+        const emailExists = await this.emailExists(addCustomerDto.email);
+        if (emailExists) {
+            throw new common_1.ConflictException(`Email '${addCustomerDto.email}' already exists`);
+        }
+        const hashedPassword = await bcrypt.hash(addCustomerDto.password, this.salt);
+        const customer = this.customerRepository.create({
+            username: addCustomerDto.username,
+            fullName: addCustomerDto.fullName,
+            email: addCustomerDto.email,
+            password: hashedPassword,
+            gender: addCustomerDto.gender,
+            phoneNumber: addCustomerDto.phone,
+            dateOfBirth: addCustomerDto.dateOfBirth ? new Date(addCustomerDto.dateOfBirth) : undefined,
+            fileName: addCustomerDto.fileName
+        });
         return await this.customerRepository.save(customer);
     }
     async updateCustomer(id, updateCustomerDto) {
@@ -96,7 +124,20 @@ let CustomerService = class CustomerService {
                 throw new common_1.ConflictException(`Username '${updateCustomerDto.username}' already exists`);
             }
         }
-        Object.assign(customer, updateCustomerDto);
+        const updateData = { ...updateCustomerDto };
+        if (updateData.phone) {
+            customer.phoneNumber = updateData.phone;
+            delete updateData.phone;
+        }
+        if (updateData.dateOfBirth) {
+            customer.dateOfBirth = new Date(updateData.dateOfBirth);
+            delete updateData.dateOfBirth;
+        }
+        else if (updateData.dateOfBirth === null || updateData.dateOfBirth === '') {
+            customer.dateOfBirth = undefined;
+            delete updateData.dateOfBirth;
+        }
+        Object.assign(customer, updateData);
         return await this.customerRepository.save(customer);
     }
     async updateProfileImage(id, fileName) {

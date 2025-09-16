@@ -10,7 +10,9 @@ import {
   Request,
   ForbiddenException,
   ParseIntPipe,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { OrderService } from './order.service';
 import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -173,5 +175,28 @@ export class OrderController {
   @Roles('admin')
   async deleteOrder(@Param('id', ParseIntPipe) id: number) {
     return await this.orderService.cancelOrder(id);
+  }
+
+  @Get(':id/invoice')
+  @UseGuards(AuthGuard)
+  async downloadInvoice(@Param('id', ParseIntPipe) id: number, @Request() req, @Res() res: Response) {
+    const order = await this.orderService.getOrderById(id);
+    const { role, sub } = req.user;
+
+    // Verify permissions
+    if (role === 'customer' && order.customer?.id !== sub) {
+      throw new ForbiddenException('You can only download invoices for your own orders');
+    }
+
+    if (role === 'seller') {
+      const hasSellerProducts = order.orderItems.some(
+        item => item.product.seller.id === parseInt(sub)
+      );
+      if (!hasSellerProducts) {
+        throw new ForbiddenException('You can only download invoices for orders containing your products');
+      }
+    }
+
+    return await this.orderService.generateInvoice(order, res);
   }
 }

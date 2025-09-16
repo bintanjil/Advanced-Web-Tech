@@ -48,7 +48,6 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.Matches)(/^[\w-.]+@aiub\.edu$/, { message: "Email format must contain @aiub.edu" }),
     __metadata("design:type", String)
 ], UpdateCustomerDto.prototype, "email", void 0);
 __decorate([

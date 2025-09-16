@@ -1,11 +1,13 @@
 import { CustomerService } from "./customer.service";
+import { MailService } from "../mail/mail.service";
 import { AddCustomerDto } from "./dto/add-customer.dto";
 import { UpdateCustomerDto } from "./dto/update-customer.dto";
 import { UpdateAddressDto } from "./dto/update-address.dto";
 import { AddAddressDto } from "./dto/add-address.dto";
 export declare class CustomerController {
     private readonly customerService;
-    constructor(customerService: CustomerService);
+    private readonly mailService;
+    constructor(customerService: CustomerService, mailService: MailService);
     getAllCustomers(): Promise<import("./customer.entity").Customer[]>;
     getProfile(req: any): Promise<import("./customer.entity").Customer>;
     getCustomerById(id: string, req: any): Promise<import("./customer.entity").Customer>;
@@ -35,5 +37,23 @@ export declare class CustomerController {
     }>;
     removeAddress(addressId: string, req: any): Promise<{
         message: string;
+    }>;
+    addCustomer(addCustomerDto: AddCustomerDto, file?: Express.Multer.File): Promise<{
+        message: string;
+        customer: {
+            id: string;
+            username: string;
+            fullName: string;
+            email: string;
+            phoneNumber: string;
+            dateOfBirth?: Date;
+            gender: string;
+            fileName: string;
+            addresses: import("./address.entity").Address[];
+            orders: import("../order/order.entity").Order[];
+            reviews: import("../review/review.entity").Review[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
     }>;
 }

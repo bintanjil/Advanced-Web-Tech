@@ -20,6 +20,7 @@ import { Address } from './customer/address.entity';
 import { Review } from './review/review.entity';
 import { Discount } from './discount/discount.entity';
 import { Category } from './category/category.entity';
+import { CategoryModule } from './category/category.module';
 
 
 @Module({
@@ -33,7 +34,7 @@ import { Category } from './category/category.entity';
       port: 5432,
       username:'postgres',
       password:'admin',
-      database:'tcommerce',
+      database:'ecommerce',
       entities:[Admin, Customer, Seller, Product, Order, OrderItem, Address, Review, Discount, Category],
       synchronize:true,
 
@@ -45,7 +46,8 @@ import { Category } from './category/category.entity';
     AuthModule, 
     MailModule, 
     OrderModule,
-    PusherModule
+    PusherModule,
+    CategoryModule
   ],
   controllers: [],
   providers: [],

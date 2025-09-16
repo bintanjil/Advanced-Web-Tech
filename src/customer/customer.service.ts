@@ -7,8 +7,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Like } from "typeorm";
 import { Customer } from "./customer.entity";
 import { Address } from "./address.entity";
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class CustomerService {
+    private readonly salt = 10;
+    
     constructor(
         @InjectRepository(Customer)
         private readonly customerRepository: Repository<Customer>,
@@ -19,7 +22,7 @@ export class CustomerService {
     // Retrieve all customers
     async findAll(): Promise<Customer[]> {
         return await this.customerRepository.find({
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
     }
 
@@ -27,7 +30,7 @@ export class CustomerService {
     async getCustomerById(id: string): Promise<Customer> {
         const customer = await this.customerRepository.findOne({
             where: { id },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'orders.orderItems', 'orders.orderItems.product', 'reviews']
         });
         
         if (!customer) {
@@ -40,7 +43,7 @@ export class CustomerService {
     async findByUsername(username: string): Promise<Customer> {
         const customer = await this.customerRepository.findOne({
             where: { username },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
         
         if (!customer) {
@@ -49,13 +52,22 @@ export class CustomerService {
         return customer;
     }
 
+    // Retrieve customer by email
+    async findByEmail(email: string): Promise<Customer | null> {
+        const customer = await this.customerRepository.findOne({
+            where: { email }
+        });
+        
+        return customer; // Don't throw error here as auth service needs to check null
+    }
+
     // Retrieve customers by substring of their fullname
     async findByFullNameSubstring(substring: string): Promise<Customer[]> {
         return await this.customerRepository.find({
             where: {
                 fullName: Like(`%${substring}%`)
             },
-            relations: ['addresses']
+            relations: ['addresses', 'orders', 'reviews']
         });
     }
 
@@ -82,7 +94,15 @@ export class CustomerService {
         return !!existingCustomer;
     }
 
-    // Add new customer
+    // Check if email already exists
+    async emailExists(email: string): Promise<boolean> {
+        const existingCustomer = await this.customerRepository.findOne({
+            where: { email }
+        });
+        return !!existingCustomer;
+    }
+
+        // Add new customer
     async createCustomer(addCustomerDto: AddCustomerDto): Promise<Customer> {
         // Check if username already exists
         const usernameExists = await this.usernameExists(addCustomerDto.username);
@@ -90,7 +110,27 @@ export class CustomerService {
             throw new ConflictException(`Username '${addCustomerDto.username}' already exists`);
         }
 
-        const customer = this.customerRepository.create(addCustomerDto);
+        // Check if email already exists
+        const emailExists = await this.emailExists(addCustomerDto.email);
+        if (emailExists) {
+            throw new ConflictException(`Email '${addCustomerDto.email}' already exists`);
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(addCustomerDto.password, this.salt);
+
+        // Create customer with proper field mapping
+        const customer = this.customerRepository.create({
+            username: addCustomerDto.username,
+            fullName: addCustomerDto.fullName,
+            email: addCustomerDto.email,
+            password: hashedPassword,
+            gender: addCustomerDto.gender,
+            phoneNumber: addCustomerDto.phone, // Map phone to phoneNumber
+            dateOfBirth: addCustomerDto.dateOfBirth ? new Date(addCustomerDto.dateOfBirth) : undefined,
+            fileName: addCustomerDto.fileName
+        });
+        
         return await this.customerRepository.save(customer);
     }
 
@@ -112,7 +152,23 @@ export class CustomerService {
             }
         }
 
-        Object.assign(customer, updateCustomerDto);
+        // Map phone to phoneNumber and handle other updates
+        const updateData = { ...updateCustomerDto };
+        if (updateData.phone) {
+            customer.phoneNumber = updateData.phone;
+            delete updateData.phone; // Remove phone so it doesn't conflict
+        }
+
+        // Handle dateOfBirth conversion
+        if (updateData.dateOfBirth) {
+            customer.dateOfBirth = new Date(updateData.dateOfBirth);
+            delete updateData.dateOfBirth; // Remove dateOfBirth so it doesn't conflict
+        } else if (updateData.dateOfBirth === null || updateData.dateOfBirth === '') {
+            customer.dateOfBirth = undefined;
+            delete updateData.dateOfBirth;
+        }
+
+        Object.assign(customer, updateData);
         return await this.customerRepository.save(customer);
     }
 

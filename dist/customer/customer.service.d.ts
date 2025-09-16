@@ -8,13 +8,16 @@ import { Address } from "./address.entity";
 export declare class CustomerService {
     private readonly customerRepository;
     private readonly addressRepository;
+    private readonly salt;
     constructor(customerRepository: Repository<Customer>, addressRepository: Repository<Address>);
     findAll(): Promise<Customer[]>;
     getCustomerById(id: string): Promise<Customer>;
     findByUsername(username: string): Promise<Customer>;
+    findByEmail(email: string): Promise<Customer | null>;
     findByFullNameSubstring(substring: string): Promise<Customer[]>;
     removeCustomer(id: string): Promise<boolean>;
     usernameExists(username: string): Promise<boolean>;
+    emailExists(email: string): Promise<boolean>;
     createCustomer(addCustomerDto: AddCustomerDto): Promise<Customer>;
     updateCustomer(id: string, updateCustomerDto: UpdateCustomerDto): Promise<Customer>;
     updateProfileImage(id: string, fileName: string): Promise<Customer>;

@@ -21,7 +21,6 @@ export class UpdateCustomerDto{
 
     @IsOptional()
     @IsEmail()
-    @Matches(/^[\w-.]+@aiub\.edu$/ , {message: "Email format must contain @aiub.edu"},)
     email?: string;
 
     @IsOptional()

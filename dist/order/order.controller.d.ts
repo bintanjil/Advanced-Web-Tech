@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { OrderService } from './order.service';
 import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -13,4 +14,5 @@ export declare class OrderController {
     updateOrder(id: number, updateOrderDto: UpdateOrderDto, req: any): Promise<import("./order.entity").Order>;
     cancelOrder(id: number, req: any): Promise<import("./order.entity").Order>;
     deleteOrder(id: number): Promise<import("./order.entity").Order>;
+    downloadInvoice(id: number, req: any, res: Response): Promise<void>;
 }

@@ -11,6 +11,7 @@ async function bootstrap() {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+        exposedHeaders: ['Set-Cookie'],
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,

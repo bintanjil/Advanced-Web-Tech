@@ -1,36 +1,37 @@
-import { IsString, IsEmail, MinLength, Matches, IsOptional } from 'class-validator';
+import { IsString, IsEmail, MinLength, Matches, IsOptional, IsNotEmpty, IsDateString } from 'class-validator';
 
 export class AddCustomerDto {
-  @IsString()
-  @MinLength(3)
+  @IsNotEmpty()
+  @Matches(/^[A-Za-z0-9_]+$/, {message: "Username must contain only letters, numbers, and underscores"})
   username: string;
 
-  @IsString()
-  @MinLength(3)
+  @IsNotEmpty()
+  @Matches(/^[A-za-z\s]+$/, {message: "Full name must contain only letters and spaces"})
   fullName: string;
 
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
-  @IsString()
-  @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Password too weak - must contain at least 1 uppercase, 1 lowercase, and 1 number or special character'
-  })
+  @IsNotEmpty()
+  @MinLength(6)
+  @Matches(/^(?=.*[A-Z]).*$/, { message: 'Password must contain at least one uppercase letter' })
   password: string;
 
-  @IsString()
-  @IsOptional()
-  gender?: string;
+  @IsNotEmpty()
+  @Matches(/^(male|female)$/i, { message: 'Gender must be either male or female' })
+  gender: string;
 
-  @IsString()
-  @Matches(/^\+?[\d\s-]+$/, {
-    message: 'Invalid phone number format'
+  @IsNotEmpty()
+  @Matches(/^01\d{9}$/, { message: 'Phone number must be 11 digits starting with 01' })
+  phone: string;
+
+  @IsOptional()
+  @IsDateString({}, {
+    message: 'Invalid date format for dateOfBirth'
   })
-  @IsOptional()
-  phone?: string;
+  dateOfBirth?: string;
 
-  @IsString()
   @IsOptional()
   fileName?: string;
 }

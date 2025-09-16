@@ -6,6 +6,7 @@ import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './update-order.dto';
 import { OrderItem } from './order-item.entity';
 import { OrderStatus } from './order.types';
+import { Response } from 'express';
 export declare class OrderService {
     private readonly orderRepository;
     private readonly orderItemRepository;
@@ -21,4 +22,5 @@ export declare class OrderService {
     updateOrder(id: number, updateOrderDto: UpdateOrderDto): Promise<Order>;
     getSellerOrders(sellerId: number): Promise<Order[]>;
     cancelOrder(id: number): Promise<Order>;
+    generateInvoice(order: Order, res: Response): Promise<void>;
 }

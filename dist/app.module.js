@@ -27,6 +27,7 @@ const address_entity_1 = require("./customer/address.entity");
 const review_entity_1 = require("./review/review.entity");
 const discount_entity_1 = require("./discount/discount.entity");
 const category_entity_1 = require("./category/category.entity");
+const category_module_1 = require("./category/category.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,7 +43,7 @@ exports.AppModule = AppModule = __decorate([
                 port: 5432,
                 username: 'postgres',
                 password: 'admin',
-                database: 'tcommerce',
+                database: 'ecommerce',
                 entities: [admin_entity_1.Admin, customer_entity_1.Customer, seller_entity_1.Seller, product_entity_1.Product, order_entity_1.Order, order_item_entity_1.OrderItem, address_entity_1.Address, review_entity_1.Review, discount_entity_1.Discount, category_entity_1.Category],
                 synchronize: true,
             }),
@@ -52,7 +53,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             mail_module_1.MailModule,
             order_module_1.OrderModule,
-            pusher_module_1.PusherModule
+            pusher_module_1.PusherModule,
+            category_module_1.CategoryModule
         ],
         controllers: [],
         providers: [],

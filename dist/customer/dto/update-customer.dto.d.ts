@@ -5,5 +5,6 @@ export declare class UpdateCustomerDto {
     password?: string;
     gender?: string;
     phone?: string;
+    dateOfBirth?: string;
     fileName?: string;
 }

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, MinLength, Matches } from 'class-validator';
+import { IsString, IsEmail, IsOptional, MinLength, Matches, IsDateString } from 'class-validator';
 
 
 export class UpdateCustomerDto {
@@ -34,6 +34,12 @@ export class UpdateCustomerDto {
   })
   @IsOptional()
   phone?: string;
+
+  @IsDateString({}, {
+    message: 'Invalid date format for dateOfBirth'
+  })
+  @IsOptional()
+  dateOfBirth?: string;
 
   @IsString()
   @IsOptional()

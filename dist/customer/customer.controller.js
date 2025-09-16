@@ -15,19 +15,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CustomerController = void 0;
 const common_1 = require("@nestjs/common");
 const customer_service_1 = require("./customer.service");
+const mail_service_1 = require("../mail/mail.service");
 const add_customer_dto_1 = require("./dto/add-customer.dto");
 const update_customer_dto_1 = require("./dto/update-customer.dto");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
+const multer = require("multer");
 const auth_guard_1 = require("../auth/auth.guard");
 const roles_decorator_1 = require("../auth/roles.decorator");
+const public_decorator_1 = require("../auth/public.decorator");
 const path_1 = require("path");
 const update_address_dto_1 = require("./dto/update-address.dto");
 const add_address_dto_1 = require("./dto/add-address.dto");
 let CustomerController = class CustomerController {
     customerService;
-    constructor(customerService) {
+    mailService;
+    constructor(customerService, mailService) {
         this.customerService = customerService;
+        this.mailService = mailService;
     }
     async getAllCustomers() {
         try {
@@ -96,6 +101,18 @@ let CustomerController = class CustomerController {
     async create(addCustomerDto) {
         try {
             const customer = await this.customerService.createCustomer(addCustomerDto);
+            this.mailService.sendCustomerWelcomeEmail(customer.email, customer.fullName)
+                .then((result) => {
+                if (result.success) {
+                    console.log(`Welcome email sent successfully to ${customer.email}`);
+                }
+                else {
+                    console.error(`Failed to send welcome email to ${customer.email}:`, result.error);
+                }
+            })
+                .catch((error) => {
+                console.error(`Error sending welcome email to ${customer.email}:`, error);
+            });
             return { message: 'Customer created successfully', customer };
         }
         catch (error) {
@@ -170,6 +187,38 @@ let CustomerController = class CustomerController {
             throw new common_1.BadRequestException('Failed to remove address');
         }
     }
+    async addCustomer(addCustomerDto, file) {
+        try {
+            if (file) {
+                addCustomerDto.fileName = file.filename;
+            }
+            const customer = await this.customerService.createCustomer(addCustomerDto);
+            this.mailService.sendCustomerWelcomeEmail(customer.email, customer.fullName)
+                .then((result) => {
+                if (result.success) {
+                    console.log(`Welcome email sent successfully to ${customer.email}`);
+                }
+                else {
+                    console.error(`Failed to send welcome email to ${customer.email}:`, result.error);
+                }
+            })
+                .catch((error) => {
+                console.error(`Error sending welcome email to ${customer.email}:`, error);
+            });
+            const { password, ...customerResponse } = customer;
+            return { message: 'Customer created successfully', customer: customerResponse };
+        }
+        catch (error) {
+            if (error.code === '23505') {
+                throw new common_1.ConflictException('Username or email already exists');
+            }
+            if (error instanceof common_1.ConflictException) {
+                throw error;
+            }
+            console.error('Customer creation error:', error);
+            throw new common_1.BadRequestException(error.message || 'Customer creation failed');
+        }
+    }
 };
 exports.CustomerController = CustomerController;
 __decorate([
@@ -216,6 +265,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "removeCustomer", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Post)('create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -236,7 +286,7 @@ __decorate([
                 return cb(null, `${randomName}${(0, path_1.extname)(file.originalname)}`);
             },
         }),
-        limits: { fileSize: 2 * 1024 * 1024 },
+        limits: { fileSize: 5 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
             if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
                 return cb(new common_1.BadRequestException('Only image files are allowed'), false);
@@ -287,8 +337,36 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CustomerController.prototype, "removeAddress", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('add'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: multer.diskStorage({
+            destination: './upload',
+            filename: (req, file, cb) => {
+                const uniqueSuffix = Date.now() + '_' + file.originalname;
+                cb(null, uniqueSuffix);
+            },
+        }),
+        fileFilter: (req, file, cb) => {
+            if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+                cb(null, true);
+            }
+            else {
+                cb(new Error('Only image files are allowed!'), false);
+            }
+        },
+        limits: { fileSize: 5 * 1024 * 1024 },
+    })),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [add_customer_dto_1.AddCustomerDto, Object]),
+    __metadata("design:returntype", Promise)
+], CustomerController.prototype, "addCustomer", null);
 exports.CustomerController = CustomerController = __decorate([
     (0, common_1.Controller)('customer'),
-    __metadata("design:paramtypes", [customer_service_1.CustomerService])
+    __metadata("design:paramtypes", [customer_service_1.CustomerService,
+        mail_service_1.MailService])
 ], CustomerController);
 //# sourceMappingURL=customer.controller.js.map

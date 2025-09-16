@@ -8,6 +8,8 @@ export declare class Customer {
     fullName: string;
     email: string;
     phoneNumber: string;
+    dateOfBirth?: Date;
+    gender: string;
     fileName: string;
     addresses: Address[];
     orders: Order[];

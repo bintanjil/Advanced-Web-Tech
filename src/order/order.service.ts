@@ -8,6 +8,8 @@ import { AddOrderDto } from './dto/add-order.dto';
 import { UpdateOrderDto } from './update-order.dto';
 import { OrderItem } from './order-item.entity';
 import { OrderStatus } from './order.types';
+import { Response } from 'express';
+const PDFDocument = require('pdfkit');
 
 @Injectable()
 export class OrderService {
@@ -81,10 +83,10 @@ export class OrderService {
     try {
       const productIds = addOrderDto.items.map(item => item.productId);
       
+      // First get products without lock to avoid LEFT JOIN + FOR UPDATE issue
       const products = await queryRunner.manager.find(Product, {
         where: { id: In(productIds) },
-        relations: ['seller'],
-        lock: { mode: 'pessimistic_write' }
+        relations: ['seller']
       });
 
       if (products.length !== productIds.length) {
@@ -264,14 +266,18 @@ export class OrderService {
     await queryRunner.startTransaction();
 
     try {
+      // First, find the order without pessimistic lock to avoid LEFT JOIN issues
       const order = await queryRunner.manager.findOne(Order, {
         where: { id },
-        relations: ['orderItems', 'orderItems.product'],
-        lock: { mode: 'pessimistic_write' }
+        relations: ['orderItems', 'orderItems.product']
       });
 
       if (!order) {
         throw new NotFoundException('Order not found');
+      }
+
+      if (order.status === 'cancelled') {
+        throw new BadRequestException('Order is already cancelled');
       }
 
       if (order.status === 'delivered') {
@@ -296,6 +302,130 @@ export class OrderService {
       throw err;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async generateInvoice(order: Order, res: Response): Promise<void> {
+    try {
+      console.log('Starting invoice generation for order:', order.id);
+      
+      return new Promise<void>((resolve, reject) => {
+        try {
+          const doc = new PDFDocument();
+          const filename = `invoice-${order.id}.pdf`;
+
+          // Set response headers
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+          console.log('PDF headers set, starting document generation');
+
+          // Pipe the PDF document to response
+          doc.pipe(res);
+
+          // Add company header
+          doc.fontSize(20).text('E-Commerce Platform', 50, 50);
+          doc.fontSize(12).text('Invoice', 50, 80);
+          
+          // Add invoice details
+          doc.text(`Invoice #: INV-${order.id}`, 50, 110);
+          doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 50, 125);
+          doc.text(`Status: ${order.status.toUpperCase()}`, 50, 140);
+
+          // Customer information
+          doc.text('Bill To:', 50, 170);
+          doc.text(`${order.customerName || order.customer?.fullName || 'N/A'}`, 50, 185);
+          doc.text(`${order.customerEmail || order.customer?.email || 'N/A'}`, 50, 200);
+          doc.text(`${order.shippingAddress || 'N/A'}`, 50, 215);
+          doc.text(`Phone: ${order.phoneNumber || 'N/A'}`, 50, 230);
+
+          // Table headers
+          const tableTop = 280;
+          doc.text('Item', 50, tableTop);
+          doc.text('Quantity', 200, tableTop);
+          doc.text('Unit Price', 300, tableTop);
+          doc.text('Total', 400, tableTop);
+
+          // Draw line under headers
+          doc.moveTo(50, tableTop + 15).lineTo(500, tableTop + 15).stroke();
+
+          // Add order items
+          let yPosition = tableTop + 30;
+          let subtotal = 0;
+
+          console.log('Adding order items to PDF, order items count:', order.orderItems?.length || 0);
+
+          if (order.orderItems && order.orderItems.length > 0) {
+            order.orderItems.forEach((item) => {
+              const unitPrice = typeof item.unitPrice === 'string' ? parseFloat(item.unitPrice) : item.unitPrice;
+              const itemTotal = unitPrice * item.quantity;
+              subtotal += itemTotal;
+
+              doc.text(item.product?.name || 'Unknown Product', 50, yPosition);
+              doc.text(item.quantity.toString(), 200, yPosition);
+              doc.text(`৳${unitPrice.toFixed(2)}`, 300, yPosition);
+              doc.text(`৳${itemTotal.toFixed(2)}`, 400, yPosition);
+
+              yPosition += 20;
+            });
+          } else {
+            doc.text('No items found', 50, yPosition);
+          }
+
+          // Add totals
+          yPosition += 20;
+          doc.moveTo(300, yPosition).lineTo(500, yPosition).stroke();
+          yPosition += 15;
+
+          doc.text('Subtotal:', 300, yPosition);
+          doc.text(`৳${subtotal.toFixed(2)}`, 400, yPosition);
+
+          yPosition += 20;
+          doc.text('Shipping:', 300, yPosition);
+          doc.text('৳0.00', 400, yPosition);
+
+          yPosition += 20;
+          doc.text('Tax:', 300, yPosition);
+          doc.text('৳0.00', 400, yPosition);
+
+          yPosition += 20;
+          doc.fontSize(14).text('Total:', 300, yPosition);
+          const totalAmount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
+          doc.text(`৳${totalAmount.toFixed(2)}`, 400, yPosition);
+
+          // Add payment information
+          yPosition += 40;
+          doc.fontSize(12).text(`Payment Method: ${order.paymentMethod?.toUpperCase().replace('_', ' ') || 'N/A'}`, 50, yPosition);
+          doc.text(`Payment Status: ${order.isPaid ? 'PAID' : 'UNPAID'}`, 50, yPosition + 15);
+
+          // Add footer
+          yPosition += 60;
+          doc.text('Thank you for your business!', 50, yPosition);
+          doc.text('For any queries, contact us at support@ecommerce.com', 50, yPosition + 20);
+
+          console.log('PDF content added, finalizing document');
+
+          // Finalize the PDF and end the stream
+          doc.end();
+
+          doc.on('end', () => {
+            console.log('PDF generation completed successfully');
+            resolve();
+          });
+
+          doc.on('error', (err) => {
+            console.error('PDF generation error:', err);
+            reject(err);
+          });
+          
+        } catch (error) {
+          console.error('Error in PDF creation block:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      console.error('Error in generateInvoice method:', error);
+      throw error;
     }
   }
 }

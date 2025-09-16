@@ -114,6 +114,20 @@ let OrderController = class OrderController {
     async deleteOrder(id) {
         return await this.orderService.cancelOrder(id);
     }
+    async downloadInvoice(id, req, res) {
+        const order = await this.orderService.getOrderById(id);
+        const { role, sub } = req.user;
+        if (role === 'customer' && order.customer?.id !== sub) {
+            throw new common_1.ForbiddenException('You can only download invoices for your own orders');
+        }
+        if (role === 'seller') {
+            const hasSellerProducts = order.orderItems.some(item => item.product.seller.id === parseInt(sub));
+            if (!hasSellerProducts) {
+                throw new common_1.ForbiddenException('You can only download invoices for orders containing your products');
+            }
+        }
+        return await this.orderService.generateInvoice(order, res);
+    }
 };
 exports.OrderController = OrderController;
 __decorate([
@@ -192,6 +206,16 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], OrderController.prototype, "deleteOrder", null);
+__decorate([
+    (0, common_1.Get)(':id/invoice'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "downloadInvoice", null);
 exports.OrderController = OrderController = __decorate([
     (0, common_1.Controller)('orders'),
     __metadata("design:paramtypes", [order_service_1.OrderService])

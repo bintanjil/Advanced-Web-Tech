@@ -17,11 +17,17 @@ export class Customer {
     @Column()
     fullName: string;
 
-    @Column()
+    @Column({ unique: true })
     email: string;
 
     @Column({ nullable: true })
     phoneNumber: string;
+
+    @Column({ nullable: true, type: 'date' })
+    dateOfBirth?: Date;
+
+    @Column({ nullable: true })
+    gender: string;
 
     @Column({ nullable: true })
     fileName: string;

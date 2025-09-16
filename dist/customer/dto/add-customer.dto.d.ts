@@ -3,7 +3,8 @@ export declare class AddCustomerDto {
     fullName: string;
     email: string;
     password: string;
-    gender?: string;
-    phone?: string;
+    gender: string;
+    phone: string;
+    dateOfBirth?: string;
     fileName?: string;
 }

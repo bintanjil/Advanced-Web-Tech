@@ -21,6 +21,7 @@ const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const auth_guard_1 = require("../auth/auth.guard");
 const roles_decorator_1 = require("../auth/roles.decorator");
+const public_decorator_1 = require("../auth/public.decorator");
 let ProductController = class ProductController {
     productService;
     constructor(productService) {
@@ -69,12 +70,14 @@ let ProductController = class ProductController {
 };
 exports.ProductController = ProductController;
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "getAllProducts", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
@@ -101,7 +104,7 @@ __decorate([
             else
                 cb(new Error('Only image files are allowed'), false);
         },
-        limits: { fileSize: 2 * 1024 * 1024 },
+        limits: { fileSize: 5 * 1024 * 1024 },
         storage: (0, multer_1.diskStorage)({
             destination: './upload',
             filename: (req, file, cb) => {
@@ -127,7 +130,7 @@ __decorate([
             else
                 cb(new Error('Only image files are allowed'), false);
         },
-        limits: { fileSize: 2 * 1024 * 1024 },
+        limits: { fileSize: 5 * 1024 * 1024 },
         storage: (0, multer_1.diskStorage)({
             destination: './upload',
             filename: (req, file, cb) => {

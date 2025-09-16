@@ -18,6 +18,7 @@ class UpdateCustomerDto {
     password;
     gender;
     phone;
+    dateOfBirth;
     fileName;
 }
 exports.UpdateCustomerDto = UpdateCustomerDto;
@@ -60,6 +61,13 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateCustomerDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsDateString)({}, {
+        message: 'Invalid date format for dateOfBirth'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateCustomerDto.prototype, "dateOfBirth", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),

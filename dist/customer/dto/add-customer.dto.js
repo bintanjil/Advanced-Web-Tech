@@ -18,46 +18,49 @@ class AddCustomerDto {
     password;
     gender;
     phone;
+    dateOfBirth;
     fileName;
 }
 exports.AddCustomerDto = AddCustomerDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(3),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Matches)(/^[A-Za-z0-9_]+$/, { message: "Username must contain only letters, numbers, and underscores" }),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "username", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(3),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Matches)(/^[A-za-z\s]+$/, { message: "Full name must contain only letters and spaces" }),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "fullName", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
-    (0, class_validator_1.Matches)(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'Password too weak - must contain at least 1 uppercase, 1 lowercase, and 1 number or special character'
-    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.Matches)(/^(?=.*[A-Z]).*$/, { message: 'Password must contain at least one uppercase letter' }),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "password", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Matches)(/^(male|female)$/i, { message: 'Gender must be either male or female' }),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "gender", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^\+?[\d\s-]+$/, {
-        message: 'Invalid phone number format'
-    }),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Matches)(/^01\d{9}$/, { message: 'Phone number must be 11 digits starting with 01' }),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "phone", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)({}, {
+        message: 'Invalid date format for dateOfBirth'
+    }),
+    __metadata("design:type", String)
+], AddCustomerDto.prototype, "dateOfBirth", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], AddCustomerDto.prototype, "fileName", void 0);
